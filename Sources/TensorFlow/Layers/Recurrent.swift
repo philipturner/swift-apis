@@ -374,7 +374,7 @@ public struct RecurrentLayer<Cell: RecurrentLayerCell>: Layer {
   public var cell: Cell
 
   // Compiler crash workaround (SR-[Place bug ID here when filed])
-  public struct TangentVector: Differentiable, AdditiveArithmetic {
+  public struct TangentVector: Differentiable, AdditiveArithmetic, ElementaryFunctions {
     public typealias TangentVector = RecurrentLayer.TangentVector
     public var cell: Cell.TangentVector
 
@@ -384,7 +384,7 @@ public struct RecurrentLayer<Cell: RecurrentLayerCell>: Layer {
   }
 
   // Compiler crash workaround (SR-[Place bug ID here when filed])
-  mutating func move(by offset: TangentVector) {
+  public mutating func move(by offset: TangentVector) {
     self.cell.move(by: offset.cell)
   } 
 
