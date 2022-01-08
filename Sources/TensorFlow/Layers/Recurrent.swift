@@ -373,6 +373,21 @@ public struct RecurrentLayer<Cell: RecurrentLayerCell>: Layer {
 
   public var cell: Cell
 
+  // Compiler crash workaround (SR-[Place bug ID here when filed])
+  public struct TangentVector: Differentiable, AdditiveArithmetic {
+    public typealias TangentVector = RecurrentLayer.TangentVector
+    public var cell: Cell.TangentVector
+
+    public init(cell: Cell.TangentVector) {
+      self.cell = cell
+    }
+  }
+
+  // Compiler crash workaround (SR-[Place bug ID here when filed])
+  mutating func move(by offset: TangentVector) {
+    self.cell.move(by: offset.cell)
+  } 
+
   public init(_ cell: @autoclosure () -> Cell) {
     self.cell = cell()
   }
