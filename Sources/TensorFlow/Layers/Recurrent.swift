@@ -374,7 +374,7 @@ public struct RecurrentLayer<Cell: RecurrentLayerCell>: Layer {
   public var cell: Cell
 
   // Compiler crash workaround (SR-[Place bug ID here when filed])
-  public struct TangentVector: Differentiable, AdditiveArithmetic, KeyPathIterable, ElementaryFunctions {
+  public struct TangentVector: Differentiable, AdditiveArithmetic, PointwiseMultiplicative, KeyPathIterable, ElementaryFunctions {
     public typealias TangentVector = RecurrentLayer.TangentVector
     public var cell: Cell.TangentVector
 
