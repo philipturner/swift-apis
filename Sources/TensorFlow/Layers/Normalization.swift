@@ -110,13 +110,13 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
     func srNameWorkaround(
       params: (offset: Tensor<Scalar>, scale: Tensor<Scalar>)
     ) -> (offset: Tensor<Scalar>, scale: Tensor<Scalar>) {
-      if positiveAxis == input.rank - 1 {
-        return params
-      } else {
+//       if positiveAxis == input.rank - 1 {
+//         return params
+//       } else {
         var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
         broadcastShape[positiveAxis] = input.shape[positiveAxis]
         return (params.offset.reshaped(to: broadcastShape), params.scale.reshaped(to: broadcastShape))
-      }
+//       }
     }
     let (offset, scale) = srNameWorkaround(params: (self.offset, self.scale))
 //     var offset = self.offset
