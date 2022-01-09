@@ -106,33 +106,60 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
       input.shape[positiveAxis] == offset.shape[0],
       "The number of features of the input and the offset doesn't match.")
     
-    // Will document the SR name shortly - try @inline(never) if it doesn't work?
-    func srNameWorkaround(
-      params: (offset: Tensor<Scalar>, scale: Tensor<Scalar>)
-    ) -> (offset: Tensor<Scalar>, scale: Tensor<Scalar>) {
-//       if positiveAxis == input.rank - 1 {
-//         return params
-//       } else {
-        var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
-        broadcastShape[positiveAxis] = input.shape[positiveAxis]
-        return (params.offset.reshaped(to: broadcastShape), params.scale.reshaped(to: broadcastShape))
-//       }
-    }
-    let (offset, scale) = srNameWorkaround(params: (self.offset, self.scale))
+//     // Will document the SR name shortly - try @inline(never) if it doesn't work?
+//     func srNameWorkaround(
+//       params: (offset: Tensor<Scalar>, scale: Tensor<Scalar>)
+//     ) -> (offset: Tensor<Scalar>, scale: Tensor<Scalar>) {
+// //       if positiveAxis == input.rank - 1 {
+// //         return params
+// //       } else {
+//         var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
+//         broadcastShape[positiveAxis] = input.shape[positiveAxis]
+//         return (params.offset.reshaped(to: broadcastShape), params.scale.reshaped(to: broadcastShape))
+// //       }
+//     }
+//     let (offset, scale) = srNameWorkaround(params: (self.offset, self.scale))
+    
 //     var offset = self.offset
 //     var scale = self.scale
 //     if positiveAxis != input.rank - 1 {
 //       var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
 //       broadcastShape[positiveAxis] = input.shape[positiveAxis]
 //       offset = offset.reshaped(to: broadcastShape)
-
+//
 //       scale = scale.reshaped(to: broadcastShape)
 //     }
-    switch Context.local.learningPhase {
-    case .training:
-      return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
-    case .inference:
-      return doInference(input, offset: offset, scale: scale)
+//     switch Context.local.learningPhase {
+//     case .training:
+//       return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
+//     case .inference:
+//       return doInference(input, offset: offset, scale: scale)
+//     }
+    
+    // Remove this workaround ASAP allow inlining of `doTraining` and `doInference`
+    if positiveAxis == input.rank - 1 {
+      let offset = self.offset
+      let scale = self.scale
+      
+      switch Context.local.learningPhase {
+      case .training:
+        return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
+      case .inference:
+        return doInference(input, offset: offset, scale: scale)
+      }
+    } else {
+      // Might need to extract this into a function
+      var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
+      broadcastShape[positiveAxis] = input.shape[positiveAxis]
+      let offset = self.offset.reshaped(to: broadcastShape)
+      let scale = self.scale.reshaped(to: broadcastShape)
+      
+      switch Context.local.learningPhase {
+      case .training:
+        return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
+      case .inference:
+        return doInference(input, offset: offset, scale: scale)
+      }
     }
   }
 
