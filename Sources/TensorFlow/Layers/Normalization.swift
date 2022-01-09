@@ -127,7 +127,7 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
   }
   
   @inline(never)
-  @differentiable(wrt: offset, scale)
+  @differentiable(wrt: (offset, scale))
   private static func srNameWorkaround(
     offset: inout Tensor<Scalar>, 
     scale: inout Tensor<Scalar>,
