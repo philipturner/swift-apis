@@ -128,8 +128,8 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
   }
   
   @inline(never)
-  @differentiable(reverse)
-  internal static func srNameWorkaround( // if this doesn't work, try a fileprivate generic struct --- remove `public` after debugging
+  @differentiable(reverse) // if the function is `public` or `internal`, the compiler crashes
+  private static func srNameWorkaround( // if this doesn't work, try a fileprivate generic struct
     offset: Tensor<Scalar>, 
     scale: Tensor<Scalar>,
     input: Tensor<Scalar>,
