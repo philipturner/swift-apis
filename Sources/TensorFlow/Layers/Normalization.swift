@@ -116,8 +116,8 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
 //       scale = scale.reshaped(to: broadcastShape)
 //     }
     if positiveAxis != input.rank - 1 {
-      (offset, scale) = Self.srNameWorkaround(offset: offset,
-                                              scale: scale,
+      Self.srNameWorkaround(offset: &offset,
+                                              scale: &scale,
                                               input: input,
                                               positiveAxis: positiveAxis)
     }
@@ -136,18 +136,19 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
   @inline(never)
   @differentiable(reverse)
   private static func srNameWorkaround(
-    offset: Tensor<Scalar>, 
-    scale: Tensor<Scalar>,
+    offset: inout Tensor<Scalar>, 
+    scale: inout Tensor<Scalar>,
     input: Tensor<Scalar>,
     positiveAxis: Int
-  ) -> (Tensor<Scalar>, Tensor<Scalar>) {
+  ) {
 //     var offsetCopy = offset
 //     var scaleCopy = offset
     
 //     if positiveAxis != input.rank - 1 {
       var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
       broadcastShape[positiveAxis] = input.shape[positiveAxis]
-      return (offset.reshaped(to: broadcastShape), scale.reshaped(to: broadcastShape))
+      offset = offset.reshaped(to: broadcastShape)
+      shape = scale.reshaped(to: broadcastShape)
 //       offsetCopy = offsetCopy.reshaped(to: broadcastShape)
 //       scaleCopy = scaleCopy.reshaped(to: broadcastShape)
 //     }
