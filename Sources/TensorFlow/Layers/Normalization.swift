@@ -107,8 +107,8 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
       "The number of features of the input and the offset doesn't match.")
 //     let offsetOriginal = self.offset
 //     let scaleOriginal = self.scale
-    var offset = self.offset
-    var scale = self.scale
+    let offsetOriginal = self.offset
+    let scaleOriginal = self.scale
 //     if positiveAxis != input.rank - 1 {
 //       var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
 //       broadcastShape[positiveAxis] = input.shape[positiveAxis]
@@ -116,10 +116,10 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
 //       scale = scale.reshaped(to: broadcastShape)
 //     }
 //     if positiveAxis != input.rank - 1 {
-      (offset, scale) = Self.srNameWorkaround(offset: offset,
-                                              scale: scale,
-                                              input: input,
-                                              positiveAxis: positiveAxis)
+     let (offset, scale) = Self.srNameWorkaround(offset: offsetOriginal,
+                                                 scale: scaleOriginal,
+                                                 input: input,
+                                                 positiveAxis: positiveAxis)
 //     }
 //     let (offset, scale) = Self.srNameWorkaround(offset: offsetOriginal,
 //                                                 scale: scaleOriginal,
