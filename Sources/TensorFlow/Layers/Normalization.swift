@@ -141,20 +141,20 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
     input: Tensor<Scalar>,
     positiveAxis: Int
   ) -> (Tensor<Scalar>, Tensor<Scalar>) {
-//     var offsetCopy = offset
-//     var scaleCopy = offset
+    var offsetCopy = offset
+    var scaleCopy = offset
     
     if positiveAxis != input.rank - 1 {
       var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
       broadcastShape[positiveAxis] = input.shape[positiveAxis]
-      return (offset.reshaped(to: broadcastShape), scale.reshaped(to: broadcastShape))
-//       offsetCopy = offsetCopy.reshaped(to: broadcastShape)
-//       scaleCopy = scaleCopy.reshaped(to: broadcastShape)
+//       return (offset.reshaped(to: broadcastShape), scale.reshaped(to: broadcastShape))
+      offsetCopy = offsetCopy.reshaped(to: broadcastShape)
+      scaleCopy = scaleCopy.reshaped(to: broadcastShape)
     } else {
-      return (offset, scale)
+//       return (offset, scale)
     }
     
-//     return (offsetCopy, scaleCopy)
+    return (offsetCopy, scaleCopy)
   }
   
 //   @inline(never)
