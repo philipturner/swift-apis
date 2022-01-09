@@ -113,7 +113,6 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
       var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
       broadcastShape[positiveAxis] = input.shape[positiveAxis]
       offset = offset.reshaped(to: broadcastShape)
-
       scale = scale.reshaped(to: broadcastShape)
     }
 //     let (offset, scale) = Self.srNameWorkaround(offset: offsetOriginal,
