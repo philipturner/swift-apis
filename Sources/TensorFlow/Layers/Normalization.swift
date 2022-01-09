@@ -105,15 +105,29 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
     precondition(
       input.shape[positiveAxis] == offset.shape[0],
       "The number of features of the input and the offset doesn't match.")
-    var offset = self.offset
-    var scale = self.scale
-    if positiveAxis != input.rank - 1 {
-      var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
-      broadcastShape[positiveAxis] = input.shape[positiveAxis]
-      offset = offset.reshaped(to: broadcastShape)
-
-      scale = scale.reshaped(to: broadcastShape)
+    
+    // Will document the SR name shortly - try @inline(never) if it doesn't work?
+    func srNameWorkaround(
+      params: (offset: Tensor<Scalar>, scale: Tensor<Scalar>)
+    ) -> (offset: Tensor<Scalar>, scale: Tensor<Scalar>) {
+      if positiveAxis == input.rank - 1 {
+        return params
+      } else {
+        var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
+        broadcastShape[positiveAxis] = input.shape[positiveAxis]
+        return (offset.reshaped(to: broadcastShape), scale.reshaped(to: broadcastShape))
+      }
     }
+    let (offset, scale) = srNameWorkaround(params: (self.offset, self.scale))
+//     var offset = self.offset
+//     var scale = self.scale
+//     if positiveAxis != input.rank - 1 {
+//       var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
+//       broadcastShape[positiveAxis] = input.shape[positiveAxis]
+//       offset = offset.reshaped(to: broadcastShape)
+
+//       scale = scale.reshaped(to: broadcastShape)
+//     }
     switch Context.local.learningPhase {
     case .training:
       return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
