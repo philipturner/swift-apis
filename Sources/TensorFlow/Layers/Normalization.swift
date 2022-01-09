@@ -105,8 +105,7 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
     precondition(
       input.shape[positiveAxis] == offset.shape[0],
       "The number of features of the input and the offset doesn't match.")
-//     var offset = self.offset
-//     var scale = self.scale
+//     var (offset, scale) = {x in (x.offset, x.scale) }(self)
 //     if positiveAxis != input.rank - 1 {
 //       var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
 //       broadcastShape[positiveAxis] = input.shape[positiveAxis]
@@ -115,10 +114,10 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
 //     }
     let offsetOriginal = self.offset
     let scaleOriginal = self.scale
-    let (offset, scale) = Self.srNameWorkaround(offset: offsetOriginal,
-                                                scale: scaleOriginal,
-                                                input: input,
-                                                positiveAxis: positiveAxis)
+    let (offset, scale) = Self._sr13263workaround(offset: offsetOriginal,
+                                                  scale: scaleOriginal,
+                                                  input: input,
+                                                  positiveAxis: positiveAxis)
     switch Context.local.learningPhase {
     case .training:
       return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
@@ -129,7 +128,7 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
   
   @inline(never)
   @differentiable(reverse) // if the function is `public` or `internal`, the compiler crashes
-  private static func srNameWorkaround( // if this doesn't work, try a fileprivate generic struct
+  private static func _sr13263workaround(
     offset: Tensor<Scalar>, 
     scale: Tensor<Scalar>,
     input: Tensor<Scalar>,
