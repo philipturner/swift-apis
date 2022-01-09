@@ -109,11 +109,17 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
 //     let scaleOriginal = self.scale
     var offset = self.offset
     var scale = self.scale
+//     if positiveAxis != input.rank - 1 {
+//       var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
+//       broadcastShape[positiveAxis] = input.shape[positiveAxis]
+//       offset = offset.reshaped(to: broadcastShape)
+//       scale = scale.reshaped(to: broadcastShape)
+//     }
     if positiveAxis != input.rank - 1 {
-      var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
-      broadcastShape[positiveAxis] = input.shape[positiveAxis]
-      offset = offset.reshaped(to: broadcastShape)
-      scale = scale.reshaped(to: broadcastShape)
+      (offset, scale) = Self.srNameWorkaround(offset: offset,
+                                              scale: scale,
+                                              input: input,
+                                              positiveAxis: positiveAxis)
     }
 //     let (offset, scale) = Self.srNameWorkaround(offset: offsetOriginal,
 //                                                 scale: scaleOriginal,
@@ -135,17 +141,18 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
     input: Tensor<Scalar>,
     positiveAxis: Int
   ) -> (Tensor<Scalar>, Tensor<Scalar>) {
-    var offsetCopy = offset
-    var scaleCopy = offset
+//     var offsetCopy = offset
+//     var scaleCopy = offset
     
-    if positiveAxis != input.rank - 1 {
+//     if positiveAxis != input.rank - 1 {
       var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
       broadcastShape[positiveAxis] = input.shape[positiveAxis]
-      offsetCopy = offsetCopy.reshaped(to: broadcastShape)
-      scaleCopy = scaleCopy.reshaped(to: broadcastShape)
-    }
+      return (offset.reshaped(to: broadcastShape), scale.reshaped(to: broadcastShape))
+//       offsetCopy = offsetCopy.reshaped(to: broadcastShape)
+//       scaleCopy = scaleCopy.reshaped(to: broadcastShape)
+//     }
     
-    return (offsetCopy, scaleCopy)
+//     return (offsetCopy, scaleCopy)
   }
   
 //   @inline(never)
