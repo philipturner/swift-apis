@@ -115,12 +115,12 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
 //       offset = offset.reshaped(to: broadcastShape)
 //       scale = scale.reshaped(to: broadcastShape)
 //     }
-    if positiveAxis != input.rank - 1 {
-      Self.srNameWorkaround(offset: &offset,
-                                              scale: &scale,
+//     if positiveAxis != input.rank - 1 {
+      (offset, scale) = Self.srNameWorkaround(offset: offset,
+                                              scale: scale,
                                               input: input,
                                               positiveAxis: positiveAxis)
-    }
+//     }
 //     let (offset, scale) = Self.srNameWorkaround(offset: offsetOriginal,
 //                                                 scale: scaleOriginal,
 //                                                 input: input,
@@ -135,23 +135,24 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
   
   @inline(never)
   @differentiable(reverse)
-  private static func srNameWorkaround(
-    offset: inout Tensor<Scalar>, 
-    scale: inout Tensor<Scalar>,
+  private static func srNameWorkaround( // if this doesn't work, try a fileprivate generic struct
+    offset: Tensor<Scalar>, 
+    scale: Tensor<Scalar>,
     input: Tensor<Scalar>,
     positiveAxis: Int
-  ) {
+  ) -> (Tensor<Scalar>, Tensor<Scalar>) {
 //     var offsetCopy = offset
 //     var scaleCopy = offset
     
-//     if positiveAxis != input.rank - 1 {
+    if positiveAxis != input.rank - 1 {
       var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
       broadcastShape[positiveAxis] = input.shape[positiveAxis]
-      offset = offset.reshaped(to: broadcastShape)
-      shape = scale.reshaped(to: broadcastShape)
+      return (offset.reshaped(to: broadcastShape), scale.reshaped(to: broadcastShape))
 //       offsetCopy = offsetCopy.reshaped(to: broadcastShape)
 //       scaleCopy = scaleCopy.reshaped(to: broadcastShape)
-//     }
+    } else {
+      return (offset, scale)
+    }
     
 //     return (offsetCopy, scaleCopy)
   }
