@@ -105,9 +105,8 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
     precondition(
       input.shape[positiveAxis] == offset.shape[0],
       "The number of features of the input and the offset doesn't match.")
-    
-//     var offset = self.offset
-//     var scale = self.scale
+    var offset = self.offset
+    var scale = self.scale
 //     if positiveAxis != input.rank - 1 {
 //       var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
 //       broadcastShape[positiveAxis] = input.shape[positiveAxis]
@@ -115,50 +114,63 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
 //
 //       scale = scale.reshaped(to: broadcastShape)
 //     }
+    Self.srNameWorkaround(offset: &offset,
+                          scale: &scale,
+                          input: input,
+                          positiveAxis: positiveAxis)
+    switch Context.local.learningPhase {
+    case .training:
+      return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
+    case .inference:
+      return doInference(input, offset: offset, scale: scale)
+    }
+  }
+  
+  @inline(never)
+  @differentiable(wrt: offset, scale)
+  private static func srNameWorkaround(
+    offset: inout Tensor<Scalar>, 
+    scale: inout Tensor<Scalar>,
+    input: Tensor<Scalar>,
+    positiveAxis: Int
+  ) {
+    if positiveAxis != input.rank - 1 {
+      var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
+      broadcastShape[positiveAxis] = input.shape[positiveAxis]
+      offset = offset.reshaped(to: broadcastShape)
+      scale = scale.reshaped(to: broadcastShape)
+    }
+  }
+  
+//   @inline(never)
+//   @differentiable(reverse, wrt: input)
+//   private func callAsFunction1(_ input: Tensor<Scalar>, positiveAxis: Int) -> Tensor<Scalar> {
+//     let offset = self.offset
+//     let scale = self.scale
+
 //     switch Context.local.learningPhase {
 //     case .training:
 //       return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
 //     case .inference:
 //       return doInference(input, offset: offset, scale: scale)
 //     }
-    
-    // Remove this workaround ASAP allow inlining of `doTraining` and `doInference`
-    if positiveAxis == input.rank - 1 {
-      return callAsFunction1(input, positiveAxis: positiveAxis)
-    } else {
-      return callAsFunction2(input, positiveAxis: positiveAxis)
-    }
-  }
+//   }
   
-  @inline(never)
-  @differentiable(reverse, wrt: input)
-  private func callAsFunction1(_ input: Tensor<Scalar>, positiveAxis: Int) -> Tensor<Scalar> {
-    let offset = self.offset
-    let scale = self.scale
+//   @inline(never)
+//   @differentiable(reverse, wrt: input)
+//   private func callAsFunction2(_ input: Tensor<Scalar>, positiveAxis: Int) -> Tensor<Scalar> {
+//     var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
+//     broadcastShape[positiveAxis] = input.shape[positiveAxis]
+//     let offset = self.offset.reshaped(to: broadcastShape)
+//     let scale = self.scale.reshaped(to: broadcastShape)
 
-    switch Context.local.learningPhase {
-    case .training:
-      return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
-    case .inference:
-      return doInference(input, offset: offset, scale: scale)
-    }
-  }
-  
-  @inline(never)
-  @differentiable(reverse, wrt: input)
-  private func callAsFunction2(_ input: Tensor<Scalar>, positiveAxis: Int) -> Tensor<Scalar> {
-    var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
-    broadcastShape[positiveAxis] = input.shape[positiveAxis]
-    let offset = self.offset.reshaped(to: broadcastShape)
-    let scale = self.scale.reshaped(to: broadcastShape)
-
-    switch Context.local.learningPhase {
-    case .training:
-      return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
-    case .inference:
-      return doInference(input, offset: offset, scale: scale)
-    }
-  }
+//     switch Context.local.learningPhase {
+//     case .training:
+//       return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
+//     case .inference:
+//       return doInference(input, offset: offset, scale: scale)
+//     }
+//   }
 
   private func doTraining(
     _ input: Tensor<Scalar>, offset: Tensor<Scalar>, scale: Tensor<Scalar>, axis: Int
