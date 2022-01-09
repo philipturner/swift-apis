@@ -131,6 +131,7 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
   }
   
   @inline(never)
+  @differentiable(reverse, wrt: input)
   private func callAsFunction1(_ input: Tensor<Scalar>, positiveAxis: Int) -> Tensor<Scalar> {
     let offset = self.offset
     let scale = self.scale
@@ -144,6 +145,7 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
   }
   
   @inline(never)
+  @differentiable(reverse, wrt: input)
   private func callAsFunction2(_ input: Tensor<Scalar>, positiveAxis: Int) -> Tensor<Scalar> {
     var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
     broadcastShape[positiveAxis] = input.shape[positiveAxis]
