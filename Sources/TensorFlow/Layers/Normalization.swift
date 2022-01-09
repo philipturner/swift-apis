@@ -124,9 +124,9 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
     
     // Remove this workaround ASAP allow inlining of `doTraining` and `doInference`
     if positiveAxis == input.rank - 1 {
-      callAsFunction1(input, positiveAxis: positiveAxis)
+      return callAsFunction1(input, positiveAxis: positiveAxis)
     } else {
-      callAsFunction2(input, positiveAxis: positiveAxis)
+      return callAsFunction2(input, positiveAxis: positiveAxis)
     }
   }
   
