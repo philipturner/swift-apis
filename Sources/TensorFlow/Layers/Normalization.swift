@@ -124,14 +124,14 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
     
     // Remove this workaround ASAP allow inlining of `doTraining` and `doInference`
     if positiveAxis == input.rank - 1 {
-      callAsFunction1(input)
+      callAsFunction1(input, positiveAxis: positiveAxis)
     } else {
-      callAsFunction2(input)
+      callAsFunction2(input, positiveAxis: positiveAxis)
     }
   }
   
   @inline(never)
-  private func callAsFunction1(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  private func callAsFunction1(_ input: Tensor<Scalar>, positiveAxis: Int) -> Tensor<Scalar> {
     let offset = self.offset
       let scale = self.scale
       
@@ -144,7 +144,7 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
   }
   
   @inline(never)
-  private func callAsFunction2(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  private func callAsFunction2(_ input: Tensor<Scalar>, positiveAxis: Int) -> Tensor<Scalar> {
     var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
       broadcastShape[positiveAxis] = input.shape[positiveAxis]
       let offset = self.offset.reshaped(to: broadcastShape)
