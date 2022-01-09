@@ -133,29 +133,29 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
   @inline(never)
   private func callAsFunction1(_ input: Tensor<Scalar>, positiveAxis: Int) -> Tensor<Scalar> {
     let offset = self.offset
-      let scale = self.scale
-      
-      switch Context.local.learningPhase {
-      case .training:
-        return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
-      case .inference:
-        return doInference(input, offset: offset, scale: scale)
-      }
+    let scale = self.scale
+
+    switch Context.local.learningPhase {
+    case .training:
+      return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
+    case .inference:
+      return doInference(input, offset: offset, scale: scale)
+    }
   }
   
   @inline(never)
   private func callAsFunction2(_ input: Tensor<Scalar>, positiveAxis: Int) -> Tensor<Scalar> {
     var broadcastShape = TensorShape([Int](repeating: 1, count: input.rank))
-      broadcastShape[positiveAxis] = input.shape[positiveAxis]
-      let offset = self.offset.reshaped(to: broadcastShape)
-      let scale = self.scale.reshaped(to: broadcastShape)
-      
-      switch Context.local.learningPhase {
-      case .training:
-        return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
-      case .inference:
-        return doInference(input, offset: offset, scale: scale)
-      }
+    broadcastShape[positiveAxis] = input.shape[positiveAxis]
+    let offset = self.offset.reshaped(to: broadcastShape)
+    let scale = self.scale.reshaped(to: broadcastShape)
+
+    switch Context.local.learningPhase {
+    case .training:
+      return doTraining(input, offset: offset, scale: scale, axis: positiveAxis)
+    case .inference:
+      return doInference(input, offset: offset, scale: scale)
+    }
   }
 
   private func doTraining(
