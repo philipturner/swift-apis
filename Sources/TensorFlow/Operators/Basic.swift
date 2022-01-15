@@ -575,7 +575,7 @@ extension Tensor {
     // Handle the axis argument by transposing the axis dimension so that it is the first
     // non-batch dimension, recursively calling `batchGathering` with `axis = 0`, and then
     // transposing the result to put the pre-axis dimensions before the indices dimensions.
-    if axis != batchDimensionCount {
+//     if axis != batchDimensionCount {
       // TODO: precondition(axis >= 0 && axis < rank, "'axis' is out of range.")
       // TODO: precondition(batchDimensionCount <= axis,
       //                    "'batchDimensionCount' must be less than or equal to 'axis'.")
@@ -607,37 +607,37 @@ extension Tensor {
         Tensor<Int32>(rangeFrom: Int32(start), to: Int32(result.rank), stride: 1, on: device),
       ])
       return result.transposed(permutation: resultPermutation)
-    }
+//     }
+//
+//     let batchIndices: Tensor<Index> = withoutDerivative(
+//       at: {
+//         var batchIndices = indices
+//         var accumulated = Tensor<Index>(ones: [], on: device)
+//         for d in (1...batchDimensionCount).reversed() {
+//           accumulated *= Tensor<Index>(self.shapeTensor[d])
+//           let dValue = self.shapeTensor[d - 1]
+//           let dIndices =
+//             Tensor<Index>(
+//               rangeFrom: Tensor<Index>(zeros: [], on: device),
+//               to: Tensor<Index>(dValue),
+//               stride: Tensor<Index>(ones: [], on: device)
+//             ) * accumulated
+//           let dShape = Tensor<Int32>(concatenating: [
+//             Tensor<Int32>([Int32](repeating: 1, count: d - 1), on: device),
+//             dValue.rankLifted(),
+//             Tensor<Int32>([Int32](repeating: 1, count: indices.rank - d), on: device),
+//           ])
+//           batchIndices += dIndices.reshaped(toShape: dShape)
+//         }
+//         return batchIndices
+//       }())
 
-    let batchIndices: Tensor<Index> = withoutDerivative(
-      at: {
-        var batchIndices = indices
-        var accumulated = Tensor<Index>(ones: [], on: device)
-        for d in (1...batchDimensionCount).reversed() {
-          accumulated *= Tensor<Index>(self.shapeTensor[d])
-          let dValue = self.shapeTensor[d - 1]
-          let dIndices =
-            Tensor<Index>(
-              rangeFrom: Tensor<Index>(zeros: [], on: device),
-              to: Tensor<Index>(dValue),
-              stride: Tensor<Index>(ones: [], on: device)
-            ) * accumulated
-          let dShape = Tensor<Int32>(concatenating: [
-            Tensor<Int32>([Int32](repeating: 1, count: d - 1), on: device),
-            dValue.rankLifted(),
-            Tensor<Int32>([Int32](repeating: 1, count: indices.rank - d), on: device),
-          ])
-          batchIndices += dIndices.reshaped(toShape: dShape)
-        }
-        return batchIndices
-      }())
-
-    let flatIndices = batchIndices.flattened()
-    let outerShape = shapeTensor[(batchDimensionCount + 1)...]
-    let innerShape = shapeTensor[..<(batchDimensionCount + 1)].product(squeezingAxes: [0])
-    let flatTensor = reshaped(toShape: innerShape.rankLifted().concatenated(with: outerShape))
-    let flatResult = flatTensor.gathering(atIndices: flatIndices)
-    return flatResult.reshaped(toShape: batchIndices.shapeTensor.concatenated(with: outerShape))
+//     let flatIndices = batchIndices.flattened()
+//     let outerShape = shapeTensor[(batchDimensionCount + 1)...]
+//     let innerShape = shapeTensor[..<(batchDimensionCount + 1)].product(squeezingAxes: [0])
+//     let flatTensor = reshaped(toShape: innerShape.rankLifted().concatenated(with: outerShape))
+//     let flatResult = flatTensor.gathering(atIndices: flatIndices)
+//     return flatResult.reshaped(toShape: batchIndices.shapeTensor.concatenated(with: outerShape))
   }
 
   /// Returns a tensor by gathering the values after applying the provided boolean mask to the input.
