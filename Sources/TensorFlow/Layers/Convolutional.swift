@@ -81,14 +81,15 @@ public struct Conv1D<Scalar: TensorFlowFloatingPoint>: Layer {
   /// - Note: Padding size equals zero when using `.valid`.
   @differentiable(reverse)
   public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
-    fatalError("temporary #2 - to avoid compiling the code below")
     let conv = conv1D(
       input,
       filter: filter,
       stride: stride,
       padding: padding,
       dilation: dilation)
-    return activation(useBias ? (conv + bias) : conv)
+//     return activation(useBias ? (conv + bias) : conv)
+    _ = activation(useBias ? (conv + bias) : conv)
+    fatalError("temporary #2 - to avoid autodiff code")
   }
 }
 
