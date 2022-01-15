@@ -634,12 +634,12 @@ extension Tensor {
         return batchIndices
       }())
 
-    let flatIndices = batchIndices.flattened()
-    let outerShape = shapeTensor[(batchDimensionCount + 1)...]
-    let innerShape = shapeTensor[..<(batchDimensionCount + 1)].product(squeezingAxes: [0])
-    let flatTensor = reshaped(toShape: innerShape.rankLifted().concatenated(with: outerShape))
-    let flatResult = flatTensor.gathering(atIndices: flatIndices)
-    return flatResult.reshaped(toShape: batchIndices.shapeTensor.concatenated(with: outerShape))
+//     let flatIndices = batchIndices.flattened()
+//     let outerShape = shapeTensor[(batchDimensionCount + 1)...]
+//     let innerShape = shapeTensor[..<(batchDimensionCount + 1)].product(squeezingAxes: [0])
+//     let flatTensor = reshaped(toShape: innerShape.rankLifted().concatenated(with: outerShape))
+//     let flatResult = flatTensor.gathering(atIndices: flatIndices)
+//     return flatResult.reshaped(toShape: batchIndices.shapeTensor.concatenated(with: outerShape))
   }
 
   /// Returns a tensor by gathering the values after applying the provided boolean mask to the input.
