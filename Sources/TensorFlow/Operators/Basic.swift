@@ -639,7 +639,7 @@ extension Tensor {
     let flatResult = flatTensor.gathering(atIndices: flatIndices)
 //     return flatResult.reshaped(toShape: batchIndices.shapeTensor.concatenated(with: outerShape))
     _ = flatResult.reshaped(toShape: batchIndices.shapeTensor.concatenated(with: outerShape))
-    fatalError("temporary #1 - to avoid autodiff code")
+    fatalError("temporary #1 - to avoid compiling autodiff code")
   }
 
   /// Returns a tensor by gathering the values after applying the provided boolean mask to the input.
