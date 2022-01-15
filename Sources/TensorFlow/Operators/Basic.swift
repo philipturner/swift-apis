@@ -636,6 +636,9 @@ extension Tensor {
       let outerShape = shapeTensor[(batchDimensionCount + 1)...]
       let innerShape = shapeTensor[..<(batchDimensionCount + 1)].product(squeezingAxes: [0])
       let flatTensor = reshaped(toShape: innerShape.rankLifted().concatenated(with: outerShape))
+      if axis == 2 {
+        return flatTensor
+      }
       fatalError("temporary \(flatTensor) - to avoid compiling the code below")
 //     let flatResult = flatTensor.gathering(atIndices: flatIndices)
 //     return flatResult.reshaped(toShape: batchIndices.shapeTensor.concatenated(with: outerShape))
