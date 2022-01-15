@@ -609,6 +609,8 @@ extension Tensor {
       return result.transposed(permutation: resultPermutation)
     }
     
+    fatalError("temporary #1 - to avoid compiling the code below")
+    
     let batchIndices: Tensor<Index> = withoutDerivative(
       at: {
         var batchIndices = indices
@@ -631,17 +633,13 @@ extension Tensor {
         }
         return batchIndices
       }())
-      
-      let flatIndices = batchIndices.flattened()
-      let outerShape = shapeTensor[(batchDimensionCount + 1)...]
-      let innerShape = shapeTensor[..<(batchDimensionCount + 1)].product(squeezingAxes: [0])
-      let flatTensor = reshaped(toShape: innerShape.rankLifted().concatenated(with: outerShape))
-      if axis == 2 {
-        return flatTensor
-      }
-      fatalError("temporary \(flatTensor) - to avoid compiling the code below")
-//     let flatResult = flatTensor.gathering(atIndices: flatIndices)
-//     return flatResult.reshaped(toShape: batchIndices.shapeTensor.concatenated(with: outerShape))
+
+    let flatIndices = batchIndices.flattened()
+    let outerShape = shapeTensor[(batchDimensionCount + 1)...]
+    let innerShape = shapeTensor[..<(batchDimensionCount + 1)].product(squeezingAxes: [0])
+    let flatTensor = reshaped(toShape: innerShape.rankLifted().concatenated(with: outerShape))
+    let flatResult = flatTensor.gathering(atIndices: flatIndices)
+    return flatResult.reshaped(toShape: batchIndices.shapeTensor.concatenated(with: outerShape))
   }
 
   /// Returns a tensor by gathering the values after applying the provided boolean mask to the input.
