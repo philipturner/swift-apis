@@ -607,32 +607,32 @@ extension Tensor {
         Tensor<Int32>(rangeFrom: Int32(start), to: Int32(result.rank), stride: 1, on: device),
       ])
       return result.transposed(permutation: resultPermutation)
-    } else {
-      fatalError("temporary - to avoid compiling the code below")
     }
-//
-//     let batchIndices: Tensor<Index> = withoutDerivative(
-//       at: {
-//         var batchIndices = indices
-//         var accumulated = Tensor<Index>(ones: [], on: device)
-//         for d in (1...batchDimensionCount).reversed() {
-//           accumulated *= Tensor<Index>(self.shapeTensor[d])
-//           let dValue = self.shapeTensor[d - 1]
-//           let dIndices =
-//             Tensor<Index>(
-//               rangeFrom: Tensor<Index>(zeros: [], on: device),
-//               to: Tensor<Index>(dValue),
-//               stride: Tensor<Index>(ones: [], on: device)
-//             ) * accumulated
-//           let dShape = Tensor<Int32>(concatenating: [
-//             Tensor<Int32>([Int32](repeating: 1, count: d - 1), on: device),
-//             dValue.rankLifted(),
-//             Tensor<Int32>([Int32](repeating: 1, count: indices.rank - d), on: device),
-//           ])
-//           batchIndices += dIndices.reshaped(toShape: dShape)
-//         }
-//         return batchIndices
-//       }())
+    
+    let batchIndices: Tensor<Index> = withoutDerivative(
+      at: {
+        var batchIndices = indices
+        var accumulated = Tensor<Index>(ones: [], on: device)
+        for d in (1...batchDimensionCount).reversed() {
+          accumulated *= Tensor<Index>(self.shapeTensor[d])
+          let dValue = self.shapeTensor[d - 1]
+          let dIndices =
+            Tensor<Index>(
+              rangeFrom: Tensor<Index>(zeros: [], on: device),
+              to: Tensor<Index>(dValue),
+              stride: Tensor<Index>(ones: [], on: device)
+            ) * accumulated
+          let dShape = Tensor<Int32>(concatenating: [
+            Tensor<Int32>([Int32](repeating: 1, count: d - 1), on: device),
+            dValue.rankLifted(),
+            Tensor<Int32>([Int32](repeating: 1, count: indices.rank - d), on: device),
+          ])
+          batchIndices += dIndices.reshaped(toShape: dShape)
+        }
+        return batchIndices
+      }())
+    
+    fatalError("temporary \(batchIndices) - to avoid compiling the code below")
 
 //     let flatIndices = batchIndices.flattened()
 //     let outerShape = shapeTensor[(batchDimensionCount + 1)...]
