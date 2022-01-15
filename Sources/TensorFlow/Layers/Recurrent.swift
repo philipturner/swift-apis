@@ -447,8 +447,10 @@ public struct RecurrentLayer<Cell: RecurrentLayerCell>: Layer {
 
   @differentiable(reverse)
   public func callAsFunction(_ inputs: [Cell.TimeStepInput]) -> [Cell.TimeStepOutput] {
-    let initialState = withoutDerivative(at: cell.zeroState(for: inputs[0]))
-    return self(inputs, initialState: initialState)
+//     let initialState = withoutDerivative(at: cell.zeroState(for: inputs[0]))
+//     return self(inputs, initialState: initialState)
+     fatalError("temporary #2 - to avoid compiling autodiff code")
+     return []
   }
 
   @differentiable(reverse, wrt: (self, inputs, initialState))
