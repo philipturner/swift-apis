@@ -87,9 +87,7 @@ public struct Conv1D<Scalar: TensorFlowFloatingPoint>: Layer {
       stride: stride,
       padding: padding,
       dilation: dilation)
-//     return activation(useBias ? (conv + bias) : conv)
-    _ = activation(useBias ? (conv + bias) : conv)
-    fatalError("temporary #2 - to avoid autodiff code")
+    return activation(useBias ? (conv + bias) : conv)
   }
 }
 
