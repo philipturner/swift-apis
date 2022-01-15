@@ -575,7 +575,7 @@ extension Tensor {
     // Handle the axis argument by transposing the axis dimension so that it is the first
     // non-batch dimension, recursively calling `batchGathering` with `axis = 0`, and then
     // transposing the result to put the pre-axis dimensions before the indices dimensions.
-//     if axis != batchDimensionCount {
+    if axis != batchDimensionCount {
       // TODO: precondition(axis >= 0 && axis < rank, "'axis' is out of range.")
       // TODO: precondition(batchDimensionCount <= axis,
       //                    "'batchDimensionCount' must be less than or equal to 'axis'.")
@@ -607,7 +607,9 @@ extension Tensor {
         Tensor<Int32>(rangeFrom: Int32(start), to: Int32(result.rank), stride: 1, on: device),
       ])
       return result.transposed(permutation: resultPermutation)
-//     }
+    } else {
+      fatalError("temporary - to avoid compiling the code below")
+    }
 //
 //     let batchIndices: Tensor<Index> = withoutDerivative(
 //       at: {
