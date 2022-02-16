@@ -46,7 +46,6 @@ let package = Package(
   ],
   dependencies: [
     .package(url: "https://github.com/apple/swift-numerics", .branch("main")),
-    .package(url: "https://github.com/pvieito/PythonKit.git", .branch("master")),
   ],
   targets: [
     .target(
@@ -62,7 +61,6 @@ let package = Package(
       name: "TensorFlow",
       dependencies: [
         "Tensor",
-        "PythonKit",
         "CTensorFlow",
         "CX10Modules",
         .product(name: "Numerics", package: "swift-numerics"),
