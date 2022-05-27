@@ -61,7 +61,6 @@ extension Tensor {
   @inlinable
   @differentiable(reverse where Scalar: TensorFlowFloatingPoint)
   public func unstacked(alongAxis axis: Int = 0) -> [Tensor] {
-    ensureValid(axis: axis)
     let posAxis = axis < 0 ? axis + rank : axis
     return _Raw.unpack(value: self, num: Int64(shape[posAxis]), axis: Int64(posAxis))
   }
@@ -91,7 +90,6 @@ extension Tensor {
   @inlinable
   @differentiable(reverse where Scalar: TensorFlowFloatingPoint)
   public func split(count: Int, alongAxis axis: Int = 0) -> [Tensor] {
-    ensureValid(axis: axis)
     let canonicalAxis = axis < 0 ? axis + rank : axis
     precondition(
       shape[canonicalAxis] % count == 0,
@@ -140,7 +138,6 @@ extension Tensor {
   @inlinable
   @differentiable(reverse, wrt: self where Scalar: TensorFlowFloatingPoint)
   public func split(sizes: [Int], alongAxis axis: Int = 0) -> [Tensor] {
-    ensureValid(axis: axis)
     let canonicalAxis = axis < 0 ? axis + rank : axis
     precondition(
       shape[canonicalAxis] == sizes.reduce(0, +),
@@ -272,36 +269,39 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
   func _vjpUnstacked(
     alongAxis axis: Int = 0
   ) -> (value: [Tensor], pullback: (Array<Tensor>.TangentVector) -> Tensor) {
-    let result = unstacked(alongAxis: axis)
-    return (result, { v in Tensor(stacking: v.base, alongAxis: axis) })
+    fatalError()
+//    let result = unstacked(alongAxis: axis)
+//    return (result, { v in Tensor(stacking: v.base, alongAxis: axis) })
   }
 
   @inlinable
   @derivative(of: tiled)
   func _vjpTiled(multiples: Tensor<Int32>) -> (value: Tensor, pullback: (Tensor) -> Tensor) {
-    (
-      tiled(multiples: multiples),
-      { [shape = shapeTensor] v in
-        let splitShape = Tensor<Int32>(stacking: [multiples, shape]).transposed()
-          .flattened()
-        let axes = Tensor<Int32>(
-          rangeFrom: 0, to: Int32(splitShape.scalarCount), stride: 2, on: device)
-        return v.reshaped(toShape: splitShape).sum(squeezingAxes: axes)
-      }
-    )
+    fatalError()
+//    (
+//      tiled(multiples: multiples),
+//      { [shape = shapeTensor] v in
+//        let splitShape = Tensor<Int32>(stacking: [multiples, shape]).transposed()
+//          .flattened()
+//        let axes = Tensor<Int32>(
+//          rangeFrom: 0, to: Int32(splitShape.scalarCount), stride: 2, on: device)
+//        return v.reshaped(toShape: splitShape).sum(squeezingAxes: axes)
+//      }
+//    )
   }
 
   @inlinable
   @derivative(of: tiled)
   func _vjpTiled(multiples: [Int]) -> (value: Tensor, pullback: (Tensor) -> Tensor) {
-    (
-      tiled(multiples: multiples),
-      { v in
-        let splits = zip(multiples, shape.dimensions).flatMap { [$0, $1] }
-        let axes = Array(stride(from: 0, to: splits.count, by: 2))
-        return v.reshaped(to: TensorShape(splits)).sum(squeezingAxes: axes)
-      }
-    )
+    fatalError()
+//    (
+//      tiled(multiples: multiples),
+//      { v in
+//        let splits = zip(multiples, shape.dimensions).flatMap { [$0, $1] }
+//        let axes = Array(stride(from: 0, to: splits.count, by: 2))
+//        return v.reshaped(to: TensorShape(splits)).sum(squeezingAxes: axes)
+//      }
+//    )
   }
 
   @inlinable
@@ -432,7 +432,6 @@ extension Tensor {
   @inlinable
   @differentiable(reverse, wrt: self where Scalar: TensorFlowFloatingPoint)
   public func reversed(inAxes axes: Tensor<Int32>) -> Tensor {
-    ensureValid(axes: axes)
     return _Raw.reverseV2(self, axis: axes)
   }
 
@@ -485,13 +484,12 @@ extension Tensor {
     atIndices indices: Tensor<Index>,
     alongAxis axis: Int = 0
   ) -> Tensor {
-    ensureValid(axis: axis)
     return _Raw.gatherV2(
       params: self, indices: indices, axis: Tensor<Int32>(Int32(axis), on: device))
   }
 
   @inlinable
-  @differentiable(reverse, wrt: self where Scalar: TensorFlowFloatingPoint)
+//  @differentiable(reverse, wrt: self where Scalar: TensorFlowFloatingPoint)
   public func batchGathering<Index: TensorFlowIndex>(
     atIndices indices: Tensor<Index>,
     alongAxis axis: Int = 1,
@@ -693,30 +691,31 @@ extension Tensor where Scalar: Numeric {
   @inlinable
   @differentiable(reverse, wrt: self where Scalar: TensorFlowFloatingPoint)
   public func unbroadcasted(to shape: TensorShape) -> Tensor {
-    let dimensions = self.shape.dimensions
-    var otherDimensions = shape.dimensions
-    let rankDifference = dimensions.count - otherDimensions.count
-    precondition(
-      rankDifference >= 0,
-      """
-      The rank of 'self' must be greater than or equal to the number of \
-      dimensions in the destination shape
-      """)
-    if rankDifference > 0 {
-      otherDimensions.insert(contentsOf: repeatElement(1, count: rankDifference), at: 0)
-    }
-    assert(dimensions.count == otherDimensions.count)
-    var axes: [Int] = []
-    axes.reserveCapacity(dimensions.count)
-    for (i, (dim, otherDim)) in zip(dimensions, otherDimensions).enumerated() {
-      if dim == otherDim { continue }
-      if otherDim == 1 {
-        axes.append(i)
-        continue
-      }
-      preconditionFailure("Cannot unbroadcast \(self.shape) to \(shape)")
-    }
-    return sum(alongAxes: axes).reshaped(to: shape)
+    fatalError()
+//    let dimensions = self.shape.dimensions
+//    var otherDimensions = shape.dimensions
+//    let rankDifference = dimensions.count - otherDimensions.count
+//    precondition(
+//      rankDifference >= 0,
+//      """
+//      The rank of 'self' must be greater than or equal to the number of \
+//      dimensions in the destination shape
+//      """)
+//    if rankDifference > 0 {
+//      otherDimensions.insert(contentsOf: repeatElement(1, count: rankDifference), at: 0)
+//    }
+//    assert(dimensions.count == otherDimensions.count)
+//    var axes: [Int] = []
+//    axes.reserveCapacity(dimensions.count)
+//    for (i, (dim, otherDim)) in zip(dimensions, otherDimensions).enumerated() {
+//      if dim == otherDim { continue }
+//      if otherDim == 1 {
+//        axes.append(i)
+//        continue
+//      }
+//      preconditionFailure("Cannot unbroadcast \(self.shape) to \(shape)")
+//    }
+//    return sum(alongAxes: axes).reshaped(to: shape)
   }
 }
 
@@ -981,82 +980,82 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
 //===------------------------------------------------------------------------------------------===//
 // Precondition utilities
 //===------------------------------------------------------------------------------------------===//
-
-extension Tensor {
-  /// Returns `true` iff `k` denotes an axis of `self`.
-  @usableFromInline
-  internal func isValid<T: BinaryInteger>(axis k: T) -> Bool {
-    let axis = Int(k)
-    return axis >= -rank && axis < rank
-  }
-
-  /// Returns `true` iff each element of `axes` denotes an axis of `self`.
-  @usableFromInline
-  internal func areValid<T: BinaryInteger>(axes: [T]) -> Bool {
-    return axes.allSatisfy { isValid(axis: $0) }
-  }
-
-  /// Returns `true` iff each element of `axes` denotes an axis of `self`.
-  ///
-  /// - Precondition: `axes` has rank 0 or rank 1.
-  @usableFromInline
-  internal func areValid(
-    axes: Tensor<Int32>,
-    file: StaticString = #file,
-    line: UInt = #line
-  ) -> Bool {
-    precondition(
-      axes.rank < 2,
-      "Axes must have rank 0 or rank 1; axes has rank \(axes.rank) with values \(axes.scalars).",
-      file: file,
-      line: line)
-    return areValid(axes: axes.scalars)
-  }
-
-  /// Checks that each element of `axes` denotes an axis of `self`, and stops the program with a
-  /// diagnostic otherwise.
-  @usableFromInline
-  func ensureValid(
-    axes: Tensor<Int32>,
-    function: StaticString = #function,
-    file: StaticString = #file,
-    line: UInt = #line
-  ) {
-    precondition(
-      areValid(axes: axes, file: file, line: line),
-      "All axes must be in `-rank..<rank` when calling \(function) (rank: \(rank), axes: \(axes))",
-      file: file,
-      line: line)
-  }
-
-  /// Checks that each element of `axes` denotes an axis of `self`, and stops the program with a
-  /// diagnostic otherwise.
-  @usableFromInline
-  func ensureValid(
-    axes: [Int],
-    function: StaticString = #function,
-    file: StaticString = #file,
-    line: UInt = #line
-  ) {
-    precondition(
-      areValid(axes: axes),
-      "All axes must be in `-rank..<rank` when calling \(function) (rank: \(rank), axes: \(axes))",
-      file: file,
-      line: line)
-  }
-
-  /// Checks that `k` denotes an axis of `self`, and stops the program with a diagnostic otherwise.
-  @usableFromInline
-  func ensureValid(
-    axis k: Int,
-    function: StaticString = #function,
-    file: StaticString = #file,
-    line: UInt = #line
-  ) {
-    precondition(
-      isValid(axis: k),
-      "Axis must be in `-rank..<rank` when calling \(function) (rank: \(rank), axis: \(k))",
-      file: file,
-      line: line)
-  }
-}
+//
+//extension Tensor {
+//  /// Returns `true` iff `k` denotes an axis of `self`.
+//  @usableFromInline
+//  internal func isValid<T: BinaryInteger>(axis k: T) -> Bool {
+//    let axis = Int(k)
+//    return axis >= -rank && axis < rank
+//  }
+//
+//  /// Returns `true` iff each element of `axes` denotes an axis of `self`.
+//  @usableFromInline
+//  internal func areValid<T: BinaryInteger>(axes: [T]) -> Bool {
+//    return axes.allSatisfy { isValid(axis: $0) }
+//  }
+//
+//  /// Returns `true` iff each element of `axes` denotes an axis of `self`.
+//  ///
+//  /// - Precondition: `axes` has rank 0 or rank 1.
+//  @usableFromInline
+//  internal func areValid(
+//    axes: Tensor<Int32>,
+//    file: StaticString = #file,
+//    line: UInt = #line
+//  ) -> Bool {
+//    precondition(
+//      axes.rank < 2,
+//      "Axes must have rank 0 or rank 1; axes has rank \(axes.rank) with values \(axes.scalars).",
+//      file: file,
+//      line: line)
+//    return areValid(axes: axes.scalars)
+//  }
+//
+//  /// Checks that each element of `axes` denotes an axis of `self`, and stops the program with a
+//  /// diagnostic otherwise.
+//  @usableFromInline
+//  func ensureValid(
+//    axes: Tensor<Int32>,
+//    function: StaticString = #function,
+//    file: StaticString = #file,
+//    line: UInt = #line
+//  ) {
+//    precondition(
+//      areValid(axes: axes, file: file, line: line),
+//      "All axes must be in `-rank..<rank` when calling \(function) (rank: \(rank), axes: \(axes))",
+//      file: file,
+//      line: line)
+//  }
+//
+//  /// Checks that each element of `axes` denotes an axis of `self`, and stops the program with a
+//  /// diagnostic otherwise.
+//  @usableFromInline
+//  func ensureValid(
+//    axes: [Int],
+//    function: StaticString = #function,
+//    file: StaticString = #file,
+//    line: UInt = #line
+//  ) {
+//    precondition(
+//      areValid(axes: axes),
+//      "All axes must be in `-rank..<rank` when calling \(function) (rank: \(rank), axes: \(axes))",
+//      file: file,
+//      line: line)
+//  }
+//
+//  /// Checks that `k` denotes an axis of `self`, and stops the program with a diagnostic otherwise.
+//  @usableFromInline
+//  func ensureValid(
+//    axis k: Int,
+//    function: StaticString = #function,
+//    file: StaticString = #file,
+//    line: UInt = #line
+//  ) {
+//    precondition(
+//      isValid(axis: k),
+//      "Axis must be in `-rank..<rank` when calling \(function) (rank: \(rank), axis: \(k))",
+//      file: file,
+//      line: line)
+//  }
+//}

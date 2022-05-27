@@ -21,7 +21,7 @@ import Numerics
 public protocol Module:
   EuclideanDifferentiable, KeyPathIterable_SR15884_Workaround
 where
-  TangentVector: VectorProtocol & ElementaryFunctions & PointwiseMultiplicative
+  TangentVector: VectorProtocol &/* ElementaryFunctions &*/ PointwiseMultiplicative
     & KeyPathIterable_SR15884_Workaround
 {
   /// The input type of the layer.
@@ -170,7 +170,7 @@ public protocol Layer: Module where Input: Differentiable {
 // }
 
 /// An empty struct representing empty `TangentVector`s for parameterless layers.
-public struct EmptyTangentVector: EuclideanDifferentiable, VectorProtocol, ElementaryFunctions,
+public struct EmptyTangentVector: EuclideanDifferentiable, VectorProtocol, /*ElementaryFunctions,*/
   PointwiseMultiplicative, KeyPathIterable
 {
   public typealias VectorSpaceScalar = Float

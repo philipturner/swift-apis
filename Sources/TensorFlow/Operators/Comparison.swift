@@ -145,29 +145,29 @@ extension Tensor where Scalar: Equatable {
   }
 }
 
-// TODO: infix operator ≈: ComparisonPrecedence
-
-extension Tensor where Scalar: TensorFlowFloatingPoint & Equatable {
-  /// Returns a tensor of Boolean values indicating whether the elements of `self` are
-  /// approximately equal to those of `other`.
-  /// - Precondition: `self` and `other` must be of the same shape.
-  @inlinable
-  public func elementsAlmostEqual(
-    _ other: Tensor,
-    tolerance: Scalar = Scalar.ulpOfOne.squareRoot()
-  ) -> Tensor<Bool> {
-    return _Raw.approximateEqual(self, other, tolerance: Double(tolerance))
-  }
-}
-
-extension Tensor where Scalar: TensorFlowFloatingPoint {
-  /// Returns `true` if all elements of `self` are approximately equal to those of `other`.
-  /// - Precondition: `self` and `other` must be of the same shape.
-  @inlinable
-  public func isAlmostEqual(
-    to other: Tensor,
-    tolerance: Scalar = Scalar.ulpOfOne.squareRoot()
-  ) -> Bool {
-    elementsAlmostEqual(other, tolerance: tolerance).all()
-  }
-}
+//// TODO: infix operator ≈: ComparisonPrecedence
+//
+//extension Tensor where Scalar: TensorFlowFloatingPoint & Equatable {
+//  /// Returns a tensor of Boolean values indicating whether the elements of `self` are
+//  /// approximately equal to those of `other`.
+//  /// - Precondition: `self` and `other` must be of the same shape.
+//  @inlinable
+//  public func elementsAlmostEqual(
+//    _ other: Tensor,
+//    tolerance: Scalar = Scalar.ulpOfOne.squareRoot()
+//  ) -> Tensor<Bool> {
+//    return _Raw.approximateEqual(self, other, tolerance: Double(tolerance))
+//  }
+//}
+//
+//extension Tensor where Scalar: TensorFlowFloatingPoint {
+//  /// Returns `true` if all elements of `self` are approximately equal to those of `other`.
+//  /// - Precondition: `self` and `other` must be of the same shape.
+//  @inlinable
+//  public func isAlmostEqual(
+//    to other: Tensor,
+//    tolerance: Scalar = Scalar.ulpOfOne.squareRoot()
+//  ) -> Bool {
+//    elementsAlmostEqual(other, tolerance: tolerance).all()
+//  }
+//}

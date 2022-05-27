@@ -505,18 +505,20 @@ extension Tensor: ExpressibleByArrayLiteral {
 extension Tensor: Equatable where Scalar: Equatable {
   @inlinable
   public static func == (lhs: Tensor, rhs: Tensor) -> Bool {
-    guard lhs.shape == rhs.shape else {
-      return false
-    }
-    return (lhs .== rhs).all()
+    fatalError()
+//    guard lhs.shape == rhs.shape else {
+//      return false
+//    }
+//    return (lhs .== rhs).all()
   }
 
   @inlinable
   public static func != (lhs: Tensor, rhs: Tensor) -> Bool {
-    guard lhs.shape == rhs.shape else {
-      return true
-    }
-    return (lhs .!= rhs).any()
+    fatalError()
+//    guard lhs.shape == rhs.shape else {
+//      return true
+//    }
+//    return (lhs .!= rhs).any()
   }
 }
 
@@ -689,7 +691,7 @@ extension Tensor: PointwiseMultiplicative where Scalar: Numeric {
 
   /// Returns the element-wise reciprocal of `self`.
   @inlinable
-  public var reciprocal: Tensor { 1 / self }
+  public var reciprocal: Tensor { fatalError() }//1 / self }
 
   /// Multiplies two tensors element-wise and produces their product.
   /// - Note: `.*` supports broadcasting.

@@ -67,12 +67,13 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
     shape: __owned TensorShape,
     on device: Device
   ) -> (value: Tensor, pullback: (Tensor) -> Scalar) {
-    return (
-      Tensor(repeating: repeatedValue, shape: shape, on: device),
-      {
-        $0.sum().scalarized()
-      }
-    )
+    fatalError()
+//    return (
+//      Tensor(repeating: repeatedValue, shape: shape, on: device),
+//      {
+//        $0.sum().scalarized()
+//      }
+//    )
   }
 }
 
@@ -559,9 +560,10 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
     glorotUniform shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed,
     on device: Device = .default
   ) {
-    let (fanIn, fanOut) = shape.fans()
-    let limit = Tensor<Scalar>(Scalar.sqrt(6 / Scalar(fanIn + fanOut)), on: device)
-    self.init(randomUniform: shape, lowerBound: -limit, upperBound: limit, seed: seed, on: device)
+    fatalError()
+//    let (fanIn, fanOut) = shape.fans()
+//    let limit = Tensor<Scalar>(Scalar.sqrt(6 / Scalar(fanIn + fanOut)), on: device)
+//    self.init(randomUniform: shape, lowerBound: -limit, upperBound: limit, seed: seed, on: device)
   }
 
   /// Creates a tensor with the specified shape by performing Glorot (Xavier) normal initialization.
@@ -581,16 +583,17 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
     glorotNormal shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed,
     on device: Device = .default
   ) {
-    let (fanIn, fanOut) = shape.fans()
-    var standardDeviation = Tensor<Scalar>(Scalar.sqrt(2 / Scalar(fanIn + fanOut)), on: device)
-    // Standard deviation of truncated standard normal between `-2` and `2` standard deviations.
-    let truncationDeviation = Tensor<Scalar>(0.87962566103423978, on: device)
-    standardDeviation /= truncationDeviation  // Smooths the tails of the clipped normal.
-    self.init(
-      randomTruncatedNormal: shape,
-      mean: Tensor<Scalar>(0, on: device),
-      standardDeviation: standardDeviation,
-      seed: seed, on: device)
+    fatalError()
+//    let (fanIn, fanOut) = shape.fans()
+//    var standardDeviation = Tensor<Scalar>(Scalar.sqrt(2 / Scalar(fanIn + fanOut)), on: device)
+//    // Standard deviation of truncated standard normal between `-2` and `2` standard deviations.
+//    let truncationDeviation = Tensor<Scalar>(0.87962566103423978, on: device)
+//    standardDeviation /= truncationDeviation  // Smooths the tails of the clipped normal.
+//    self.init(
+//      randomTruncatedNormal: shape,
+//      mean: Tensor<Scalar>(0, on: device),
+//      standardDeviation: standardDeviation,
+//      seed: seed, on: device)
   }
 }
 
@@ -612,9 +615,10 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
     heUniform shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed,
     on device: Device = .default
   ) {
-    let (fanIn, _) = shape.fans()
-    let limit = Tensor<Scalar>(Scalar.sqrt(6 / Scalar(fanIn)), on: device)
-    self.init(randomUniform: shape, lowerBound: -limit, upperBound: limit, seed: seed, on: device)
+    fatalError()
+//    let (fanIn, _) = shape.fans()
+//    let limit = Tensor<Scalar>(Scalar.sqrt(6 / Scalar(fanIn)), on: device)
+//    self.init(randomUniform: shape, lowerBound: -limit, upperBound: limit, seed: seed, on: device)
   }
 
   /// Creates a tensor with the specified shape by performing He (Kaiming) normal initialization.
@@ -634,16 +638,17 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
     heNormal shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed,
     on device: Device = .default
   ) {
-    let (fanIn, _) = shape.fans()
-    var standardDeviation = Tensor<Scalar>(Scalar.sqrt(2 / Scalar(fanIn)), on: device)
-    // Standard deviation of truncated standard normal between `-2` and `2` standard deviations.
-    let truncationDeviation = Tensor<Scalar>(0.87962566103423978, on: device)
-    standardDeviation /= truncationDeviation  // Smooths the tails of the clipped normal.
-    self.init(
-      randomTruncatedNormal: shape,
-      mean: Tensor<Scalar>(0, on: device),
-      standardDeviation: standardDeviation,
-      seed: seed, on: device)
+    fatalError()
+//    let (fanIn, _) = shape.fans()
+//    var standardDeviation = Tensor<Scalar>(Scalar.sqrt(2 / Scalar(fanIn)), on: device)
+//    // Standard deviation of truncated standard normal between `-2` and `2` standard deviations.
+//    let truncationDeviation = Tensor<Scalar>(0.87962566103423978, on: device)
+//    standardDeviation /= truncationDeviation  // Smooths the tails of the clipped normal.
+//    self.init(
+//      randomTruncatedNormal: shape,
+//      mean: Tensor<Scalar>(0, on: device),
+//      standardDeviation: standardDeviation,
+//      seed: seed, on: device)
   }
 }
 
@@ -664,9 +669,10 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
     leCunUniform shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed,
     on device: Device = .default
   ) {
-    let (fanIn, _) = shape.fans()
-    let limit = Tensor<Scalar>(Scalar.sqrt(3 / Scalar(fanIn)), on: device)
-    self.init(randomUniform: shape, lowerBound: -limit, upperBound: limit, seed: seed, on: device)
+    fatalError()
+//    let (fanIn, _) = shape.fans()
+//    let limit = Tensor<Scalar>(Scalar.sqrt(3 / Scalar(fanIn)), on: device)
+//    self.init(randomUniform: shape, lowerBound: -limit, upperBound: limit, seed: seed, on: device)
   }
 
   /// Creates a tensor with the specified shape by performing LeCun normal initialization.
@@ -685,16 +691,17 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
     leCunNormal shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed,
     on device: Device = .default
   ) {
-    let (fanIn, _) = shape.fans()
-    var standardDeviation = Tensor<Scalar>(Scalar.sqrt(1 / Scalar(fanIn)), on: device)
-    // Standard deviation of truncated standard normal between `-2` and `2` standard deviations.
-    let truncationDeviation = Tensor<Scalar>(0.87962566103423978, on: device)
-    standardDeviation /= truncationDeviation  // Smooths the tails of the clipped normal.
-    self.init(
-      randomTruncatedNormal: shape,
-      mean: Tensor<Scalar>(0, on: device),
-      standardDeviation: standardDeviation,
-      seed: seed, on: device)
+    fatalError()
+//    let (fanIn, _) = shape.fans()
+//    var standardDeviation = Tensor<Scalar>(Scalar.sqrt(1 / Scalar(fanIn)), on: device)
+//    // Standard deviation of truncated standard normal between `-2` and `2` standard deviations.
+//    let truncationDeviation = Tensor<Scalar>(0.87962566103423978, on: device)
+//    standardDeviation /= truncationDeviation  // Smooths the tails of the clipped normal.
+//    self.init(
+//      randomTruncatedNormal: shape,
+//      mean: Tensor<Scalar>(0, on: device),
+//      standardDeviation: standardDeviation,
+//      seed: seed, on: device)
   }
 }
 
@@ -719,21 +726,22 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
     gain: Tensor<Scalar> = Tensor<Scalar>(1),
     seed: TensorFlowSeed = Context.local.randomSeed
   ) {
-    let rowCount = shape.dimensions.dropLast().reduce(1, *)
-    let columnCount = shape[shape.rank - 1]
-    var flatShape: TensorShape
-    if rowCount < columnCount {
-      flatShape = [columnCount, rowCount]
-    } else {
-      flatShape = [rowCount, columnCount]
-    }
-    let normal = Tensor(randomNormal: flatShape, seed: seed)
-    var (q, r) = normal.qrDecomposition(fullMatrices: false)
-    let d = r.diagonalPart()
-    q *= sign(d)
-    if rowCount < columnCount {
-      q = q.transposed()
-    }
-    self = q.reshaped(to: shape) * gain
+    fatalError()
+//    let rowCount = shape.dimensions.dropLast().reduce(1, *)
+//    let columnCount = shape[shape.rank - 1]
+//    var flatShape: TensorShape
+//    if rowCount < columnCount {
+//      flatShape = [columnCount, rowCount]
+//    } else {
+//      flatShape = [rowCount, columnCount]
+//    }
+//    let normal = Tensor(randomNormal: flatShape, seed: seed)
+//    var (q, r) = normal.qrDecomposition(fullMatrices: false)
+//    let d = r.diagonalPart()
+//    q *= sign(d)
+//    if rowCount < columnCount {
+//      q = q.transposed()
+//    }
+//    self = q.reshaped(to: shape) * gain
   }
 }

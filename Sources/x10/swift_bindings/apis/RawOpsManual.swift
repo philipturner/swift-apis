@@ -2755,29 +2755,31 @@ public enum _RawXLA {
     features: Tensor<T>,
     labels: Tensor<T>
   ) -> (loss: Tensor<T>, backprop: Tensor<T>) {
-    checkSameDevice(features, labels)
-    checkSamePrecision(features, labels)
-    let logits = features
-    let logits_max = max(logits, dim: 1, keepDim: true)
-    let shifted_logits = _RawXLA.sub(logits, logits_max)
-    let exp = _RawXLA.exp(shifted_logits)
-    let sum_exp = _RawXLA.sum(exp, reductionIndices: Tensor<Int64>([1]), keepDims: true)
-    let log_sum_exp = _RawXLA.log(sum_exp)
-    return (
-      loss: _RawXLA.sum(
-        _RawXLA.mul(-labels, shifted_logits - log_sum_exp),
-        reductionIndices: Tensor<Int64>([1])),
-      backprop: _RawXLA.sub(_RawXLA.div(exp, sum_exp), labels)
-    )
+    fatalError()
+//    checkSameDevice(features, labels)
+//    checkSamePrecision(features, labels)
+//    let logits = features
+//    let logits_max = max(logits, dim: 1, keepDim: true)
+//    let shifted_logits = _RawXLA.sub(logits, logits_max)
+//    let exp = _RawXLA.exp(shifted_logits)
+//    let sum_exp = _RawXLA.sum(exp, reductionIndices: Tensor<Int64>([1]), keepDims: true)
+//    let log_sum_exp = _RawXLA.log(sum_exp)
+//    return (
+//      loss: _RawXLA.sum(
+//        _RawXLA.mul(-labels, shifted_logits - log_sum_exp),
+//        reductionIndices: Tensor<Int64>([1])),
+//      backprop: _RawXLA.sub(_RawXLA.div(exp, sum_exp), labels)
+//    )
   }
 
   /// Computes softplus: `log(exp(features) + 1)`.
   public static func softplus<T: FloatingPoint & TensorFlowScalar>(
     features: Tensor<T>
   ) -> Tensor<T> {
-    _RawXLA.addV2(
-      _RawXLA.maximum(features, _RawXLA.zerosLike(features)),
-      _RawXLA.log1p(_RawXLA.exp(-_RawXLA.abs(features))))
+    fatalError()
+//    _RawXLA.addV2(
+//      _RawXLA.maximum(features, _RawXLA.zerosLike(features)),
+//      _RawXLA.log1p(_RawXLA.exp(-_RawXLA.abs(features))))
   }
 
   /// Computes softplus gradients for a softplus operation.
