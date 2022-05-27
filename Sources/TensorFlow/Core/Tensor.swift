@@ -619,92 +619,96 @@ extension Tensor: Codable where Scalar: Codable {
 extension Tensor: AdditiveArithmetic where Scalar: Numeric {
   /// The scalar zero tensor.
   public static var zero: Tensor {
-    var zero = Tensor(0, on: _DeviceThreadLocalState.local.currentDevice)
-    if _DeviceThreadLocalState.local.isReducedPrecision {
-      zero = zero.toReducedPrecision
-    }
-    zero._isScalarZero = true
-    return zero
+    fatalError()
+//    var zero = Tensor(0, on: _DeviceThreadLocalState.local.currentDevice)
+//    if _DeviceThreadLocalState.local.isReducedPrecision {
+//      zero = zero.toReducedPrecision
+//    }
+//    zero._isScalarZero = true
+//    return zero
   }
 
   /// Adds two tensors and produces their sum.
   /// - Note: `+` supports broadcasting.
   @inlinable
-  @differentiable(reverse where Scalar: TensorFlowFloatingPoint)
+//  @differentiable(reverse where Scalar: TensorFlowFloatingPoint)
   public static func + (lhs: Tensor, rhs: Tensor) -> Tensor {
-    if lhs._isScalarZero {
-      return rhs
-    } else if rhs._isScalarZero {
-      return lhs
-    }
-    return _Raw.addV2(lhs, rhs)
+    fatalError()
+//    if lhs._isScalarZero {
+//      return rhs
+//    } else if rhs._isScalarZero {
+//      return lhs
+//    }
+//    return _Raw.addV2(lhs, rhs)
   }
 
   /// Subtracts one tensor from another and produces their difference.
   /// - Note: `-` supports broadcasting.
   @inlinable
-  @differentiable(reverse where Scalar: TensorFlowFloatingPoint)
+//  @differentiable(reverse where Scalar: TensorFlowFloatingPoint)
   public static func - (lhs: Tensor, rhs: Tensor) -> Tensor {
-    if rhs._isScalarZero {
-      return lhs
-    }
-    return _Raw.sub(lhs, rhs)
+    fatalError()
+//    if rhs._isScalarZero {
+//      return lhs
+//    }
+//    return _Raw.sub(lhs, rhs)
   }
 }
 
 extension Tensor where Scalar: TensorFlowFloatingPoint {
-  @inlinable
-  @derivative(of: +)
-  static func _vjpAdd(lhs: Tensor, rhs: Tensor) -> (
-    value: Tensor, pullback: (Tensor) -> (Tensor, Tensor)
-  ) {
-    (
-      lhs + rhs,
-      { [broadcastPb = BroadcastingPullback(lhs, rhs)] v in
-        return broadcastPb(v, v)
-      }
-    )
-  }
+//  @inlinable
+//  @derivative(of: +)
+//  static func _vjpAdd(lhs: Tensor, rhs: Tensor) -> (
+//    value: Tensor, pullback: (Tensor) -> (Tensor, Tensor)
+//  ) {
+//    (
+//      lhs + rhs,
+//      { [broadcastPb = BroadcastingPullback(lhs, rhs)] v in
+//        return broadcastPb(v, v)
+//      }
+//    )
+//  }
 
-  @inlinable
-  @derivative(of: -)
-  static func _vjpSubtract(lhs: Tensor, rhs: Tensor) -> (
-    value: Tensor, pullback: (Tensor) -> (Tensor, Tensor)
-  ) {
-    (
-      lhs - rhs,
-      { [broadcastPb = BroadcastingPullback(lhs, rhs)] v in
-        return broadcastPb(v, -v)
-      }
-    )
-  }
+//  @inlinable
+//  @derivative(of: -)
+//  static func _vjpSubtract(lhs: Tensor, rhs: Tensor) -> (
+//    value: Tensor, pullback: (Tensor) -> (Tensor, Tensor)
+//  ) {
+//    (
+//      lhs - rhs,
+//      { [broadcastPb = BroadcastingPullback(lhs, rhs)] v in
+//        return broadcastPb(v, -v)
+//      }
+//    )
+//  }
 }
 
 //===------------------------------------------------------------------------------------------===//
 // Multiplicative Group
 //===------------------------------------------------------------------------------------------===//
 
-extension Tensor: PointwiseMultiplicative where Scalar: Numeric {
-  /// The scalar one tensor.
-  @inlinable
-  public static var one: Tensor { Tensor(1) }
-
-  /// Returns the element-wise reciprocal of `self`.
-  @inlinable
-  public var reciprocal: Tensor { fatalError() }//1 / self }
-
-  /// Multiplies two tensors element-wise and produces their product.
-  /// - Note: `.*` supports broadcasting.
-  public static func .* (lhs: Tensor, rhs: Tensor) -> Tensor {
-    return lhs * rhs
-  }
-}
+//extension Tensor: PointwiseMultiplicative where Scalar: Numeric {
+//  /// The scalar one tensor.
+//  @inlinable
+//  public static var one: Tensor { Tensor(1) }
+//
+//  /// Returns the element-wise reciprocal of `self`.
+//  @inlinable
+//  public var reciprocal: Tensor { fatalError() }//1 / self }
+//
+//  /// Multiplies two tensors element-wise and produces their product.
+//  /// - Note: `.*` supports broadcasting.
+//  public static func .* (lhs: Tensor, rhs: Tensor) -> Tensor {
+//    fatalError()
+////    return lhs * rhs
+//  }
+//}
 
 //===------------------------------------------------------------------------------------------===//
 // Differentiable
 //===------------------------------------------------------------------------------------------===//
 
-extension Tensor: Differentiable & EuclideanDifferentiable where Scalar: TensorFlowFloatingPoint {
+extension Tensor: Differentiable /*& EuclideanDifferentiable*/ where Scalar: TensorFlowFloatingPoint {
   public typealias TangentVector = Tensor
 
   public var zeroTangentVectorInitializer: () -> TangentVector {
@@ -745,7 +749,7 @@ public protocol TensorProtocol {
 }
 
 public protocol DifferentiableTensorProtocol:
-  TensorProtocol & Differentiable & EuclideanDifferentiable
+  TensorProtocol & Differentiable //& EuclideanDifferentiable
 where Scalar: TensorFlowFloatingPoint {
   @differentiable(reverse, wrt: self)
   func annotate(_ annotation: String) -> Self

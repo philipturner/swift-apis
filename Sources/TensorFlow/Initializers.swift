@@ -47,7 +47,8 @@ extension Tensor {
   @inlinable
   // @differentiable(reverse where Scalar: TensorFlowFloatingPoint)
   public init(broadcasting scalar: Scalar, rank: Int, on device: Device = .default) {
-    self = Tensor(scalar, on: device).reshaped(to: TensorShape(repeating: 1, count: rank))
+    fatalError()
+//    self = Tensor(scalar, on: device).reshaped(to: TensorShape(repeating: 1, count: rank))
   }
 
   /// Creates a tensor of shape `[4]` from a 4-tuple.
@@ -187,8 +188,9 @@ extension Tensor {
   @inlinable
   @differentiable(reverse where Scalar: TensorFlowFloatingPoint)
   public init(concatenating tensors: [Tensor], alongAxis axis: Int = 0) {
-    precondition(tensors.count > 0)
-    self = _Raw.concatV2(tensors, axis: Tensor<Int32>(Int32(axis), on: tensors.first!.device))
+    fatalError()
+//    precondition(tensors.count > 0)
+//    self = _Raw.concatV2(tensors, axis: Tensor<Int32>(Int32(axis), on: tensors.first!.device))
   }
 }
 
@@ -207,12 +209,13 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
     stacking tensors: __owned [Tensor],
     alongAxis axis: __owned Int = 0
   ) -> (value: Tensor, pullback: (Tensor) -> Array<Tensor>.DifferentiableView) {
-    (
-      Tensor(stacking: tensors, alongAxis: axis),
-      { v in
-        Array<Tensor>.DifferentiableView(v.unstacked(alongAxis: axis))
-      }
-    )
+    fatalError()
+//    (
+//      Tensor(stacking: tensors, alongAxis: axis),
+//      { v in
+//        Array<Tensor>.DifferentiableView(v.unstacked(alongAxis: axis))
+//      }
+//    )
   }
 
   @inlinable
@@ -410,13 +413,14 @@ extension Tensor where Scalar: TensorFlowIndex {
     seed: TensorFlowSeed = Context.local.randomSeed,
     on device: Device = .default
   ) {
-    let lowerBound = lowerBound ?? Tensor<Scalar>(0, on: device)
-    let upperBound = upperBound ?? Tensor<Scalar>(1, on: device)
-    self = _Raw.statelessRandomUniformInt(
-      shape: Tensor<Int32>((0..<shape.rank).map { Int32(shape[$0]) }, on: device),
-      seed: Tensor<Int32>([seed.graph, seed.op], on: device),
-      minval: lowerBound,
-      maxval: upperBound)
+    fatalError()
+//    let lowerBound = lowerBound ?? Tensor<Scalar>(0, on: device)
+//    let upperBound = upperBound ?? Tensor<Scalar>(1, on: device)
+//    self = _Raw.statelessRandomUniformInt(
+//      shape: Tensor<Int32>((0..<shape.rank).map { Int32(shape[$0]) }, on: device),
+//      seed: Tensor<Int32>([seed.graph, seed.op], on: device),
+//      minval: lowerBound,
+//      maxval: upperBound)
   }
 }
 
@@ -436,12 +440,13 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
     seed: TensorFlowSeed = Context.local.randomSeed,
     on device: Device = .default
   ) {
-    let lowerBound = lowerBound ?? Tensor<Scalar>(0, on: device)
-    let upperBound = upperBound ?? Tensor<Scalar>(1, on: device)
-    let sample: Tensor<Scalar> = _Raw.statelessRandomUniform(
-      shape: Tensor<Int32>((0..<shape.rank).map { Int32(shape[$0]) }, on: device),
-      seed: Tensor<Int32>([seed.graph, seed.op], on: device))
-    self = (upperBound - lowerBound) * sample + lowerBound
+    fatalError()
+//    let lowerBound = lowerBound ?? Tensor<Scalar>(0, on: device)
+//    let upperBound = upperBound ?? Tensor<Scalar>(1, on: device)
+//    let sample: Tensor<Scalar> = _Raw.statelessRandomUniform(
+//      shape: Tensor<Int32>((0..<shape.rank).map { Int32(shape[$0]) }, on: device),
+//      seed: Tensor<Int32>([seed.graph, seed.op], on: device))
+//    self = (upperBound - lowerBound) * sample + lowerBound
   }
 
   /// Creates a tensor with the specified shape, randomly sampling scalar values from a normal 
@@ -459,12 +464,13 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
     seed: TensorFlowSeed = Context.local.randomSeed,
     on device: Device = .default
   ) {
-    let sample: Tensor<Scalar> = _Raw.statelessRandomNormal(
-      shape: Tensor<Int32>((0..<shape.rank).map { Int32(shape[$0]) }, on: device),
-      seed: Tensor<Int32>([seed.graph, seed.op], on: device))
-    self =
-      (standardDeviation ?? Tensor<Scalar>(1, on: device)) * sample
-      + (mean ?? Tensor<Scalar>(0, on: device))
+    fatalError()
+//    let sample: Tensor<Scalar> = _Raw.statelessRandomNormal(
+//      shape: Tensor<Int32>((0..<shape.rank).map { Int32(shape[$0]) }, on: device),
+//      seed: Tensor<Int32>([seed.graph, seed.op], on: device))
+//    self =
+//      (standardDeviation ?? Tensor<Scalar>(1, on: device)) * sample
+//      + (mean ?? Tensor<Scalar>(0, on: device))
   }
 
   /// Creates a tensor with the specified shape, randomly sampling scalar values from a truncated
@@ -482,12 +488,13 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
     seed: TensorFlowSeed = Context.local.randomSeed,
     on device: Device = .default
   ) {
-    let sample: Tensor<Scalar> = _Raw.statelessTruncatedNormal(
-      shape: Tensor<Int32>((0..<shape.rank).map { Int32(shape[$0]) }, on: device),
-      seed: Tensor<Int32>([seed.graph, seed.op], on: device))
-    self =
-      (standardDeviation ?? Tensor<Scalar>(1, on: device)) * sample
-      + (mean ?? Tensor<Scalar>(0, on: device))
+    fatalError()
+//    let sample: Tensor<Scalar> = _Raw.statelessTruncatedNormal(
+//      shape: Tensor<Int32>((0..<shape.rank).map { Int32(shape[$0]) }, on: device),
+//      seed: Tensor<Int32>([seed.graph, seed.op], on: device))
+//    self =
+//      (standardDeviation ?? Tensor<Scalar>(1, on: device)) * sample
+//      + (mean ?? Tensor<Scalar>(0, on: device))
   }
 }
 
@@ -507,11 +514,12 @@ extension Tensor where Scalar: TensorFlowIndex {
     sampleCount: Int32,
     seed: TensorFlowSeed = Context.local.randomSeed
   ) {
-    let device = randomCategorialLogits.device
-    self = _Raw.statelessMultinomial(
-      logits: randomCategorialLogits,
-      numSamples: Tensor<Int32>(sampleCount, on: device),
-      seed: Tensor<Int32>([seed.graph, seed.op], on: device))
+    fatalError()
+//    let device = randomCategorialLogits.device
+//    self = _Raw.statelessMultinomial(
+//      logits: randomCategorialLogits,
+//      numSamples: Tensor<Int32>(sampleCount, on: device),
+//      seed: Tensor<Int32>([seed.graph, seed.op], on: device))
   }
 }
 

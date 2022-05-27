@@ -116,9 +116,9 @@ public struct ParameterGroupOptimizer {
 /// The optimizer is composed of a mapping from ParameterGroup to ParameterGroupOptimizer.
 /// This optimizer also contains the number of elements working in a cross replica sum.
 /// This is for efficiency to prevent multiple inefficient iterations over the gradient.
-public class GeneralOptimizer<Model: EuclideanDifferentiable>: Optimizer
+public class GeneralOptimizer<Model: Differentiable>: Optimizer
 where
-  Model.TangentVector: VectorProtocol & ElementaryFunctions & KeyPathIterable
+  Model.TangentVector: /*VectorProtocol &*/ ElementaryFunctions & KeyPathIterable
 {
   public typealias Model = Model
   /// The set of steps taken.
@@ -173,17 +173,18 @@ where
     parameterGroupIndices: [Int],
     parameterGroups: [ParameterGroupOptimizer]
   ) {
-    self.kpPlan = kpPlan
-    let zerosPattern = model.differentiableVectorView
-    // TODO(parkers): Be more precise here...
-    let stateCount = parameterGroups.map { $0.stateCount }.max() ?? 0
-    self.optimizerState = OptimizerState(
-      kpPlan.allTensorKeyPaths.map { kp in
-        Tensor<Float>(zerosLike: zerosPattern[keyPath: kp])
-      }, stateCount: stateCount)
-    self.device = zerosPattern[keyPath: kpPlan.allTensorKeyPaths[0]].device
-    self.parameterGroupIndices = parameterGroupIndices
-    self.parameterGroups = parameterGroups
+    fatalError()
+//    self.kpPlan = kpPlan
+//    let zerosPattern = model.differentiableVectorView
+//    // TODO(parkers): Be more precise here...
+//    let stateCount = parameterGroups.map { $0.stateCount }.max() ?? 0
+//    self.optimizerState = OptimizerState(
+//      kpPlan.allTensorKeyPaths.map { kp in
+//        Tensor<Float>(zerosLike: zerosPattern[keyPath: kp])
+//      }, stateCount: stateCount)
+//    self.device = zerosPattern[keyPath: kpPlan.allTensorKeyPaths[0]].device
+//    self.parameterGroupIndices = parameterGroupIndices
+//    self.parameterGroups = parameterGroups
   }
 
   /// Constructs an optimizer from a sequence of per-parameter group optimizers
@@ -209,26 +210,27 @@ where
   /// The actual optimizer step. Maps over all the tensors of the gradient
   /// and applies per-weight optimizers defined by ParameterGroupOptimizer.
   public func update(_ model: inout Model, along direction: Model.TangentVector) {
-    step += 1
-    let globals = parameterGroups.map { pg in
-      pg.globals.map { globalInit in globalInit(pg.hyperparameters, device) }
-    }
-    var step = direction
-    let crsScale : Double? = crossReplicaSumCount.map { 1.0 / Double($0) }
-    // step plays dual-duties as an inout parameter for efficiency.
-    let _ = kpPlan.mapTensors(&step, model.differentiableVectorView) {
-      (step: inout Tensor<Float>, weight: Tensor<Float>, i: Int) in
-      let selector = parameterGroupIndices[i]
-      let paramGroup = parameterGroups[selector]
-      var state = OptimizerWeightStepState(
-        globals: globals[selector], grad: step, weight: weight, weightId: i)
-      if let crsScale = crsScale {
-        state.grad = _Raw.crossReplicaSum([state.grad], crsScale).first!
-      }
-      for cb in paramGroup.callbacks { cb(&state, &optimizerState) }
-      step = state.step ?? Tensor<Float>(zerosLike: step)
-    }
-    model.move(by: step)
+    fatalError()
+//    step += 1
+//    let globals = parameterGroups.map { pg in
+//      pg.globals.map { globalInit in globalInit(pg.hyperparameters, device) }
+//    }
+//    var step = direction
+//    let crsScale : Double? = crossReplicaSumCount.map { 1.0 / Double($0) }
+//    // step plays dual-duties as an inout parameter for efficiency.
+//    let _ = kpPlan.mapTensors(&step, model.differentiableVectorView) {
+//      (step: inout Tensor<Float>, weight: Tensor<Float>, i: Int) in
+//      let selector = parameterGroupIndices[i]
+//      let paramGroup = parameterGroups[selector]
+//      var state = OptimizerWeightStepState(
+//        globals: globals[selector], grad: step, weight: weight, weightId: i)
+//      if let crsScale = crsScale {
+//        state.grad = _Raw.crossReplicaSum([state.grad], crsScale).first!
+//      }
+//      for cb in paramGroup.callbacks { cb(&state, &optimizerState) }
+//      step = state.step ?? Tensor<Float>(zerosLike: step)
+//    }
+//    model.move(by: step)
   }
 
   /// Copies the optimizer to the specified device.

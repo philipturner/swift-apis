@@ -1511,11 +1511,12 @@ public enum _RawXLA {
   public static func invertPermutation<T: TensorFlowIndex>(
     _ x: Tensor<T>
   ) -> Tensor<T> {
-    if x.rank != 1 {
-      fatalError("Input should be rank 1, got \(x.rank)")
-    }
-    let scalars = invertPermutationArray(x.scalars)
-    return Tensor<T>(shape: [scalars.count], scalars: scalars, on: x.device)
+    fatalError()
+//    if x.rank != 1 {
+//      fatalError("Input should be rank 1, got \(x.rank)")
+//    }
+//    let scalars = invertPermutationArray(x.scalars)
+//    return Tensor<T>(shape: [scalars.count], scalars: scalars, on: x.device)
   }
 
   /// Computes rectified linear: `max(features, features * alpha)`.

@@ -255,62 +255,62 @@ where Element: Differentiable {
   public init() { self.init(.init()) }
 }
 
-extension Array.DifferentiableView: VectorProtocol
-where Element: Differentiable & VectorProtocol {
-  public typealias VectorSpaceScalar = Element.VectorSpaceScalar
+//extension Array.DifferentiableView: VectorProtocol
+//where Element: Differentiable & VectorProtocol {
+//  public typealias VectorSpaceScalar = Element.VectorSpaceScalar
+//
+//  public func adding(_ x: Element.VectorSpaceScalar) -> Array<Element>.DifferentiableView {
+//    .init(map { $0.adding(x) })
+//  }
+//
+//  public mutating func add(_ x: Element.VectorSpaceScalar) {
+//    for i in indices {
+//      self[i].add(x)
+//    }
+//  }
+//
+//  public func subtracting(_ x: Element.VectorSpaceScalar) -> Array<Element>.DifferentiableView {
+//    .init(map { $0.subtracting(x) })
+//  }
+//
+//  public mutating func subtract(_ x: Element.VectorSpaceScalar) {
+//    for i in indices {
+//      self[i].subtract(x)
+//    }
+//  }
+//
+//  public func scaled(by scale: Element.VectorSpaceScalar) -> Self {
+//    .init(map { $0.scaled(by: scale) })
+//  }
+//
+//  public mutating func scale(by scale: Element.VectorSpaceScalar) {
+//    for i in indices {
+//      self[i].scale(by: scale)
+//    }
+//  }
+//}
 
-  public func adding(_ x: Element.VectorSpaceScalar) -> Array<Element>.DifferentiableView {
-    .init(map { $0.adding(x) })
-  }
-
-  public mutating func add(_ x: Element.VectorSpaceScalar) {
-    for i in indices {
-      self[i].add(x)
-    }
-  }
-
-  public func subtracting(_ x: Element.VectorSpaceScalar) -> Array<Element>.DifferentiableView {
-    .init(map { $0.subtracting(x) })
-  }
-
-  public mutating func subtract(_ x: Element.VectorSpaceScalar) {
-    for i in indices {
-      self[i].subtract(x)
-    }
-  }
-
-  public func scaled(by scale: Element.VectorSpaceScalar) -> Self {
-    .init(map { $0.scaled(by: scale) })
-  }
-
-  public mutating func scale(by scale: Element.VectorSpaceScalar) {
-    for i in indices {
-      self[i].scale(by: scale)
-    }
-  }
-}
-
-extension Array.DifferentiableView: PointwiseMultiplicative
-where Element: Differentiable & PointwiseMultiplicative {
-  // FIXME: `one` should probably be removed from the protocol. `Array` cannot represent `one`.
-  public static var one: Self {
-    fatalError("One is not array-representable")
-  }
-
-  public var reciprocal: Self { .init(map { $0.reciprocal }) }
-
-  public static func .* (lhs: Self, rhs: Self) -> Self {
-    precondition(lhs.count == rhs.count, "Count mismatch: \(lhs.count) and \(rhs.count)")
-    return .init(zip(lhs, rhs).map(.*))
-  }
-
-  public static func .*= (lhs: inout Self, rhs: Self) {
-    precondition(lhs.count == rhs.count, "Count mismatch: \(lhs.count) and \(rhs.count)")
-    for (i, x) in zip(lhs.indices, rhs) {
-      lhs[i] .*= x
-    }
-  }
-}
+//extension Array.DifferentiableView: PointwiseMultiplicative
+//where Element: Differentiable & PointwiseMultiplicative {
+//  // FIXME: `one` should probably be removed from the protocol. `Array` cannot represent `one`.
+//  public static var one: Self {
+//    fatalError("One is not array-representable")
+//  }
+//
+//  public var reciprocal: Self { .init(map { $0.reciprocal }) }
+//
+//  public static func .* (lhs: Self, rhs: Self) -> Self {
+//    precondition(lhs.count == rhs.count, "Count mismatch: \(lhs.count) and \(rhs.count)")
+//    return .init(zip(lhs, rhs).map(.*))
+//  }
+//
+//  public static func .*= (lhs: inout Self, rhs: Self) {
+//    precondition(lhs.count == rhs.count, "Count mismatch: \(lhs.count) and \(rhs.count)")
+//    for (i, x) in zip(lhs.indices, rhs) {
+//      lhs[i] .*= x
+//    }
+//  }
+//}
 
 extension Collection {
   /// Returns the `n`th position in `self`.

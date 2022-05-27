@@ -226,93 +226,97 @@ class TFFunction {
   var name: String { String(cString: TF_FunctionName(cTFFunction)!) }
 
   init(trace: LazyTensorTrace, name: String? = nil) {
-    let status: CTFStatus = TF_NewStatus()
-    defer { TF_DeleteStatus(status) }
-    let graph = TFGraph(trace: trace)
-    let cTFGraph = graph.cTFGraph
-    let inputs = graph.inputs
-    let outputs = graph.outputs
-    let tracedFnName = name ?? graph.name
-    self.outputCount = outputs.count
-    self.outputGroupCounts = graph.outputGroupCounts
-    self.cTFFunction = graph.nodes.withUnsafeBufferPointer {
-      operations -> CTFFunction in
-      let base = operations.baseAddress
-      let tracedGraphFn = TF_GraphToFunction(
-        cTFGraph,
-        tracedFnName,
-        /*append_hash_to_fn_name*/(name == nil ? 1 : 0),
-        /*num_opers*/Int32(operations.count),
-        /*opers*/base,
-        /*numinputs*/Int32(inputs.count),
-        /*inputs*/inputs,
-        /*noutputs*/Int32(outputs.count),
-        /*outputs*/outputs,
-        /*outputnames*/nil,
-        /*functionoptions*/nil,
-        "",
-        status)
-      checkOk(status)
-      if _RuntimeConfig.printsDebugLog {
-        var len: Int = 0
-        let funcDebugStr = TF_FunctionDebugString(tracedGraphFn, &len)!
-        debugLog("The traced function is:\n\(String(cString: funcDebugStr))")
-        free(funcDebugStr)
-        debugLog("Corresponding lazy tensor operations:\n")
-        for output in graph.outputs {
-          debugLog("  \(output)")
-        }
-      }
-      return tracedGraphFn!
-    }
-
-    let eagerContext = _TFCGetGlobalEagerContext()
-    TFE_ContextAddFunction(eagerContext, self.cTFFunction, status)
-    checkOk(status)
+    fatalError()
+//    let status: CTFStatus = TF_NewStatus()
+//    defer { TF_DeleteStatus(status) }
+//    let graph = TFGraph(trace: trace)
+//    let cTFGraph = graph.cTFGraph
+//    let inputs = graph.inputs
+//    let outputs = graph.outputs
+//    let tracedFnName = name ?? graph.name
+//    self.outputCount = outputs.count
+//    self.outputGroupCounts = graph.outputGroupCounts
+//    self.cTFFunction = graph.nodes.withUnsafeBufferPointer {
+//      operations -> CTFFunction in
+//      let base = operations.baseAddress
+//      let tracedGraphFn = TF_GraphToFunction(
+//        cTFGraph,
+//        tracedFnName,
+//        /*append_hash_to_fn_name*/(name == nil ? 1 : 0),
+//        /*num_opers*/Int32(operations.count),
+//        /*opers*/base,
+//        /*numinputs*/Int32(inputs.count),
+//        /*inputs*/inputs,
+//        /*noutputs*/Int32(outputs.count),
+//        /*outputs*/outputs,
+//        /*outputnames*/nil,
+//        /*functionoptions*/nil,
+//        "",
+//        status)
+//      checkOk(status)
+//      if _RuntimeConfig.printsDebugLog {
+//        var len: Int = 0
+//        let funcDebugStr = TF_FunctionDebugString(tracedGraphFn, &len)!
+//        debugLog("The traced function is:\n\(String(cString: funcDebugStr))")
+//        fatalError()
+////        free(funcDebugStr)
+//        debugLog("Corresponding lazy tensor operations:\n")
+//        for output in graph.outputs {
+//          debugLog("  \(output)")
+//        }
+//      }
+//      return tracedGraphFn!
+//    }
+//
+//    let eagerContext = _TFCGetGlobalEagerContext()
+//    TFE_ContextAddFunction(eagerContext, self.cTFFunction, status)
+//    checkOk(status)
   }
 
   func execute(_ inputs: [TFETensorHandle], usingXLA: Bool = false) -> [TFETensorHandle] {
-    let status: CTFStatus = TF_NewStatus()
-    defer { TF_DeleteStatus(status) }
-
-    let eagerContext = _TFCGetGlobalEagerContext()
-    let fname = TF_FunctionName(cTFFunction)!
-    let eagerOp: CTFEOp! = TFE_NewOp(eagerContext, fname, status)
-    defer { TFE_DeleteOp(eagerOp) }
-    checkOk(status)
-
-    let deviceName = _ExecutionContext.global.currentDeviceName
-    if let deviceName = deviceName {
-      debugLog("Placing the trace func on device \(deviceName).")
-      TFE_OpSetDevice(eagerOp, deviceName, status)
-      checkOk(status)
-    }
-
-    if usingXLA {
-      debugLog("Enabling XLA compilation")
-      TFE_OpSetAttrBool(eagerOp, "_XlaCompile", 1)
-    }
-
-    for input in inputs {
-      TFE_OpAddInput(eagerOp, input._cTensorHandle, status)
-      checkOk(status)
-    }
-
-    var returnValues = [CTensorHandle?](repeating: nil, count: outputCount)
-    var outputReturnValueCount = Int32(outputCount)
-    TFE_Execute(eagerOp, &returnValues, &outputReturnValueCount, status)
-    checkOk(status)
-
-    return returnValues.map { TFETensorHandle(_owning: $0!) }
+    fatalError()
+//    let status: CTFStatus = TF_NewStatus()
+//    defer { TF_DeleteStatus(status) }
+//
+//    let eagerContext = _TFCGetGlobalEagerContext()
+//    let fname = TF_FunctionName(cTFFunction)!
+//    let eagerOp: CTFEOp! = TFE_NewOp(eagerContext, fname, status)
+//    defer { TFE_DeleteOp(eagerOp) }
+//    checkOk(status)
+//
+//    let deviceName = _ExecutionContext.global.currentDeviceName
+//    if let deviceName = deviceName {
+//      debugLog("Placing the trace func on device \(deviceName).")
+//      TFE_OpSetDevice(eagerOp, deviceName, status)
+//      checkOk(status)
+//    }
+//
+//    if usingXLA {
+//      debugLog("Enabling XLA compilation")
+//      TFE_OpSetAttrBool(eagerOp, "_XlaCompile", 1)
+//    }
+//
+//    for input in inputs {
+//      TFE_OpAddInput(eagerOp, input._cTensorHandle, status)
+//      checkOk(status)
+//    }
+//
+//    var returnValues = [CTensorHandle?](repeating: nil, count: outputCount)
+//    var outputReturnValueCount = Int32(outputCount)
+//    TFE_Execute(eagerOp, &returnValues, &outputReturnValueCount, status)
+//    checkOk(status)
+//
+//    return returnValues.map { TFETensorHandle(_owning: $0!) }
   }
 }
 
 extension TFFunction: CustomStringConvertible {
   var description: String {
-    var len: Int = 0
-    let funcDebugStr = TF_FunctionDebugString(cTFFunction, &len)!
-    let result = String(cString: funcDebugStr)
-    free(funcDebugStr)
-    return result
+    fatalError()
+//    var len: Int = 0
+//    let funcDebugStr = TF_FunctionDebugString(cTFFunction, &len)!
+//    let result = String(cString: funcDebugStr)
+//    free(funcDebugStr)
+//    return result
   }
 }

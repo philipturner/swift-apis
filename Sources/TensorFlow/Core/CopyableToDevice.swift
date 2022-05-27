@@ -88,13 +88,13 @@ extension Tensor: CopyableToDevice {
     self = _Raw.toDevice(other, device)
   }
 }
-
-extension Parameter: CopyableToDevice {
-  /// Creates a copy of `other` on the given `Device`.
-  public convenience init(copying other: Parameter, to device: Device) {
-    self.init(.init(copying: other.value, to: device))
-  }
-}
+//
+//extension Parameter: CopyableToDevice {
+//  /// Creates a copy of `other` on the given `Device`.
+//  public convenience init(copying other: Parameter, to device: Device) {
+//    self.init(.init(copying: other.value, to: device))
+//  }
+//}
 
 #if SR15884_WORKAROUND_2
 public typealias CopyableToDevice_SR15884_Workaround = Any
