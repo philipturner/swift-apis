@@ -68,7 +68,7 @@ public protocol _TensorFlowDataTypeCompatible {
 /// `Tensor`.
 //
 // This includes all `_TensorFlowDataTypeCompatible` types except `String`.
-public protocol TensorFlowScalar: XLAScalarType & _TensorFlowDataTypeCompatible {}
+public protocol TensorFlowScalar: _TensorFlowDataTypeCompatible {}
 
 public typealias TensorFlowNumeric = TensorFlowScalar & Numeric
 public typealias TensorFlowSignedNumeric = TensorFlowScalar & SignedNumeric

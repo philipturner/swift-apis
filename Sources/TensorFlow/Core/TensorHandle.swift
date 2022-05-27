@@ -40,15 +40,17 @@ public class TFETensorHandle: _AnyTensorHandle {
   public var _tfeTensorHandle: TFETensorHandle { return self }
 
   public init(_owning base: CTensorHandle) {
-    Context.local.globalTensorCount += 1
-    self._cTensorHandle = base
+    fatalError()
+//    Context.local.globalTensorCount += 1
+//    self._cTensorHandle = base
   }
 
   deinit {
-    debugLog("De-initializing TensorHandle.")
-    TFE_DeleteTensorHandle(_cTensorHandle)
-    Context.local.globalTensorCount -= 1
-    debugLog("Returning from deinit of TensorHandle.")
+    fatalError()
+//    debugLog("De-initializing TensorHandle.")
+//    TFE_DeleteTensorHandle(_cTensorHandle)
+//    Context.local.globalTensorCount -= 1
+//    debugLog("Returning from deinit of TensorHandle.")
   }
 
   /// The number of dimensions of the underlying `Tensor`.
@@ -268,19 +270,20 @@ internal class CTensorTensorBuffer<Scalar>: TensorBuffer<Scalar> {
 extension ShapedArray where Scalar: _TensorFlowDataTypeCompatible {
   @usableFromInline
   init(owning cTensor: CTensor) {
-    // Including \(Scalar.self) into the message would cause non-deterministic crashes.
-    debugLog("Initializing ShapedArray from CTensor.")
-    let shape = (0..<TF_NumDims(cTensor)).map { Int(TF_Dim(cTensor, $0)) }
-    if _RuntimeConfig.printsDebugLog {
-      // Without this local variable, passing the string directly into debugLog() would not
-      // work, because 'self' is captured by the auto closure param in debugLog().
-      let shapeStr = "The shape is \(shape)."
-      debugLog(shapeStr)
-    }
-    self.init(
-      buffer: CTensorTensorBuffer<Scalar>(owning: cTensor, count: shape.reduce(1, *)),
-      shape: shape)
-    debugLog("Done initializing ShapedArray from CTensor.")
+    fatalError()
+//    // Including \(Scalar.self) into the message would cause non-deterministic crashes.
+//    debugLog("Initializing ShapedArray from CTensor.")
+//    let shape = (0..<TF_NumDims(cTensor)).map { Int(TF_Dim(cTensor, $0)) }
+//    if _RuntimeConfig.printsDebugLog {
+//      // Without this local variable, passing the string directly into debugLog() would not
+//      // work, because 'self' is captured by the auto closure param in debugLog().
+//      let shapeStr = "The shape is \(shape)."
+//      debugLog(shapeStr)
+//    }
+//    self.init(
+//      buffer: CTensorTensorBuffer<Scalar>(owning: cTensor, count: shape.reduce(1, *)),
+//      shape: shape)
+//    debugLog("Done initializing ShapedArray from CTensor.")
   }
 
   @usableFromInline
@@ -300,19 +303,20 @@ extension ShapedArray where Scalar: _TensorFlowDataTypeCompatible {
 // Tensor conversion.
 extension Tensor {
   public init(_ array: __owned ShapedArray<Scalar>, on device: Device = .default) {
-    precondition(
-      array.rank <= Int(Int32.max),
-      "Conversion to TensorHandle is undefined when rank exceeds `Int32.max`.")
-    precondition(
-      array.shape.allSatisfy { $0 <= Int(Int32.max) },
-      "Conversion to TensorHandle is undefined when shape dimensions exceed `Int32.max`.")
-    if let buffer = array.buffer as? CTensorTensorBuffer<Scalar> {
-      let tmp = Tensor(handle: TensorHandle(copyingFromCTensor: buffer.cTensor))
-      self = tmp.device == device ? tmp : Tensor(copying: tmp, to: device)
-    } else {
-      self = array.buffer.withUnsafeBufferPointer { buffer in
-        return Tensor(shape: TensorShape(array.shape), scalars: buffer, on: device)
-      }
-    }
+    fatalError()
+//    precondition(
+//      array.rank <= Int(Int32.max),
+//      "Conversion to TensorHandle is undefined when rank exceeds `Int32.max`.")
+//    precondition(
+//      array.shape.allSatisfy { $0 <= Int(Int32.max) },
+//      "Conversion to TensorHandle is undefined when shape dimensions exceed `Int32.max`.")
+//    if let buffer = array.buffer as? CTensorTensorBuffer<Scalar> {
+//      let tmp = Tensor(handle: TensorHandle(copyingFromCTensor: buffer.cTensor))
+//      self = tmp.device == device ? tmp : Tensor(copying: tmp, to: device)
+//    } else {
+//      self = array.buffer.withUnsafeBufferPointer { buffer in
+//        return Tensor(shape: TensorShape(array.shape), scalars: buffer, on: device)
+//      }
+//    }
   }
 }

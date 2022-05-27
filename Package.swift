@@ -27,14 +27,14 @@ let package = Package(
       name: "TensorFlow",
       type: .dynamic,
       targets: ["TensorFlow"]),
-    .library(
-      name: "x10_optimizers_optimizer",
-      type: .dynamic,
-      targets: ["x10_optimizers_optimizer"]),
-    .library(
-      name: "x10_optimizers_tensor_visitor_plan",
-      type: .dynamic,
-      targets: ["x10_optimizers_tensor_visitor_plan"]),
+//    .library(
+//      name: "x10_optimizers_optimizer",
+//      type: .dynamic,
+//      targets: ["x10_optimizers_optimizer"]),
+//    .library(
+//      name: "x10_optimizers_tensor_visitor_plan",
+//      type: .dynamic,
+//      targets: ["x10_optimizers_tensor_visitor_plan"]),
     // .library(
     //   name: "x10_training_loop",
     //   type: .dynamic,
@@ -62,24 +62,24 @@ let package = Package(
       swiftSettings: [
         .define("DEFAULT_BACKEND_EAGER"),
       ]),
-    .target(
-      name: "x10_optimizers_tensor_visitor_plan",
-      dependencies: ["TensorFlow"],
-      path: "Sources/x10",
-      sources: [
-        "swift_bindings/optimizers/TensorVisitorPlan.swift",
-      ]),
-    .target(
-      name: "x10_optimizers_optimizer",
-      dependencies: [
-        "x10_optimizers_tensor_visitor_plan",
-        "TensorFlow",
-      ],
-      path: "Sources/x10",
-      sources: [
-        "swift_bindings/optimizers/Optimizer.swift",
-        "swift_bindings/optimizers/Optimizers.swift",
-      ]),
+//    .target(
+//      name: "x10_optimizers_tensor_visitor_plan",
+//      dependencies: ["TensorFlow"],
+//      path: "Sources/x10",
+//      sources: [
+//        "swift_bindings/optimizers/TensorVisitorPlan.swift",
+//      ]),
+//    .target(
+//      name: "x10_optimizers_optimizer",
+//      dependencies: [
+//        "x10_optimizers_tensor_visitor_plan",
+//        "TensorFlow",
+//      ],
+//      path: "Sources/x10",
+//      sources: [
+//        "swift_bindings/optimizers/Optimizer.swift",
+//        "swift_bindings/optimizers/Optimizers.swift",
+//      ]),
     // .target(
     //   name: "x10_training_loop",
     //   dependencies: ["TensorFlow"],

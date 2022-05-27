@@ -552,14 +552,14 @@ extension ShapedArray {
 }
 
 // Array literal conversion.
-extension ShapedArray: ExpressibleByArrayLiteral where Scalar: TensorFlowScalar {
-  public typealias ArrayLiteralElement = _TensorElementLiteral<Scalar>
-  @inlinable
-  public init(arrayLiteral elements: _TensorElementLiteral<Scalar>...) {
-    precondition(!elements.isEmpty, "Cannot create a 'ShapedArray' with no elements.")
-    self = Tensor<Scalar>(_tensorElementLiterals: elements).array
-  }
-}
+//extension ShapedArray: ExpressibleByArrayLiteral where Scalar: TensorFlowScalar {
+//  public typealias ArrayLiteralElement = _TensorElementLiteral<Scalar>
+//  @inlinable
+//  public init(arrayLiteral elements: _TensorElementLiteral<Scalar>...) {
+//    precondition(!elements.isEmpty, "Cannot create a 'ShapedArray' with no elements.")
+//    self = Tensor<Scalar>(_tensorElementLiterals: elements).array
+//  }
+//}
 
 // Equatable conformance.
 extension ShapedArray: Equatable where Scalar: Equatable {
@@ -907,22 +907,22 @@ extension ShapedArraySlice: RandomAccessCollection, MutableCollection {
   }
 }
 
-// Tensor conversion.
-extension ShapedArraySlice where Scalar: TensorFlowScalar {
-  public init(_ tensor: __shared Tensor<Scalar>) {
-    self.init(base: tensor.array)
-  }
-}
+//// Tensor conversion.
+//extension ShapedArraySlice where Scalar: TensorFlowScalar {
+//  public init(_ tensor: __shared Tensor<Scalar>) {
+//    self.init(base: tensor.array)
+//  }
+//}
 
-// Array literal conversion.
-extension ShapedArraySlice: ExpressibleByArrayLiteral where Scalar: TensorFlowScalar {
-  public typealias ArrayLiteralElement = _TensorElementLiteral<Scalar>
-  @inlinable
-  public init(arrayLiteral elements: _TensorElementLiteral<Scalar>...) {
-    precondition(!elements.isEmpty, "Cannot create a 'ShapedArraySlice' with no elements.")
-    self.init(base: Tensor(_tensorElementLiterals: elements).array)
-  }
-}
+//// Array literal conversion.
+//extension ShapedArraySlice: ExpressibleByArrayLiteral where Scalar: TensorFlowScalar {
+//  public typealias ArrayLiteralElement = _TensorElementLiteral<Scalar>
+//  @inlinable
+//  public init(arrayLiteral elements: _TensorElementLiteral<Scalar>...) {
+//    precondition(!elements.isEmpty, "Cannot create a 'ShapedArraySlice' with no elements.")
+//    self.init(base: Tensor(_tensorElementLiterals: elements).array)
+//  }
+//}
 
 // Equatable conformance.
 extension ShapedArraySlice: Equatable where Scalar: Equatable {

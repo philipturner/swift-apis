@@ -132,11 +132,12 @@ internal func debugLog(
   file: StaticString = #file,
   line: UInt = #line
 ) {
-  if _RuntimeConfig.printsDebugLog {
-    print("[\(file):\(line)] \(message())")
-    // This helps dump more log before a crash.
-    fflush(stdout)
-  }
+  fatalError()
+//  if _RuntimeConfig.printsDebugLog {
+//    print("[\(file):\(line)] \(message())")
+//    // This helps dump more log before a crash.
+//    fflush(stdout)
+//  }
 }
 
 //===------------------------------------------------------------------------------------------===//
