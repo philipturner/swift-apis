@@ -111,7 +111,7 @@ extension MultiDeviceAPITests {
   ]
 }
 
-XCTMain([
-  testCase(XLATensorTests.allTests),
-  testCase(MultiDeviceAPITests.allTests),
-])
+//XCTMain([
+//  testCase(XLATensorTests.allTests),
+//  testCase(MultiDeviceAPITests.allTests),
+//])

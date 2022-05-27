@@ -118,6 +118,6 @@ extension KeyPathIterableTests {
   ]
 }
 
-XCTMain([
-  testCase(KeyPathIterableTests.allTests)
-])
+//XCTMain([
+//  testCase(KeyPathIterableTests.allTests)
+//])

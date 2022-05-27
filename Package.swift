@@ -97,5 +97,9 @@ let package = Package(
     .testTarget(
       name: "TensorFlowTests",
       dependencies: ["TensorFlow"]),
+    .testTarget(
+      name: "x10Tests",
+      dependencies: ["TensorFlow"],
+      path: "Tests/x10")
   ]
 )

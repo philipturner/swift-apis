@@ -96,6 +96,6 @@ extension TensorVisitorPlanTests {
   ]
 }
 
-XCTMain([
-  testCase(TensorVisitorPlanTests.allTests)
-])
+//XCTMain([
+//  testCase(TensorVisitorPlanTests.allTests)
+//])

@@ -5,10 +5,13 @@ import XCTest
 @_silgen_name("SetMatMulPrecision")
 internal func SetMatMulPrecision(_: Bool) -> Void
 
-setenv("XLA_FLAGS", "--xla_cpu_fast_math_honor_nans=true --xla_cpu_fast_math_honor_infs=true", 1)
-SetMatMulPrecision(true)
-let x10 = Device.defaultXLA
-let tf = Device.defaultTFEager
+let (x10, tf): (Device, Device) = { () -> (Device, Device) in
+  setenv("XLA_FLAGS", "--xla_cpu_fast_math_honor_nans=true --xla_cpu_fast_math_honor_infs=true", 1)
+  SetMatMulPrecision(true)
+  let x10 = Device.defaultXLA
+  let tf = Device.defaultTFEager
+  return (x10, tf)
+}()
 
 private func X10<T>(_ x: Tensor<T>) -> Tensor<T> {
   return Tensor<T>(copying: x, to: x10)
@@ -3729,6 +3732,6 @@ extension TensorTests {
 // export XRT_DEVICE_MAP="CPU:0;/job:localservice/replica:0/task:0/device:XLA_CPU:0"
 // export XRT_WORKERS="localservice:0;grpc://localhost:40934"
 
-XCTMain([
-  testCase(TensorTests.allTests)
-])
+//XCTMain([
+//  testCase(TensorTests.allTests)
+//])
