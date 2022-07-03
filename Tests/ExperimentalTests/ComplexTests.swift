@@ -14,7 +14,11 @@
 
 import XCTest
 
+#if canImport(Differentiation)
+import Differentiation
+#else
 import _Differentiation
+#endif
 @testable import Experimental
 
 final class ComplexTests: XCTestCase {

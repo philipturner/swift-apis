@@ -12,11 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(Differentiation)
+import Differentiation
+#else
 import _Differentiation
+#endif
 
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
 
+#if canImport(ReflectionMirror)
+@_spi(Reflection) import ReflectionMirror
+#else
 @_spi(Reflection) import Swift
+#endif
 
 /// Implementation detail for reflection.
 ///
@@ -39,9 +47,11 @@ extension VectorProtocol {
   internal static func visitChildren(
     _ body: (PartialKeyPath<Self>, _VectorProtocol.Type) -> Void
   ) {
+#if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
     guard #available(macOS 9999, *) else {
       fatalError("\(#function) is unavailable")
     }
+#endif
 
     if !_forEachFieldWithKeyPath(
       of: Self.self,

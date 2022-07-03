@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(Differentiation)
+import Differentiation
+#else
 import _Differentiation
+#endif
 import Foundation
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
 import Numerics
@@ -239,9 +243,15 @@ extension Layer {
     -> (output: Output, backpropagator: Backpropagator)
   {
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
+    #if canImport(Differentiation)
+    let (out, pullback) = Differentiation.valueWithPullback(at: self, input) { layer, input in
+      return layer(input)
+    }
+    #else
     let (out, pullback) = _Differentiation.valueWithPullback(at: self, input) { layer, input in
       return layer(input)
     }
+    #endif
 #else
     let (out, pullback) = Swift.valueWithPullback(at: self, input) { layer, input in
       return layer(input)

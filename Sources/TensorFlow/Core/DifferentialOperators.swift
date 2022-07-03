@@ -16,7 +16,11 @@
 // Free-function-style differential operators
 // ===------------------------------------------------------------------------------------------===//
 
+#if canImport(Differentiation)
+import Differentiation
+#else
 import _Differentiation
+#endif
 
 // Value with gradient
 

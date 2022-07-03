@@ -15,15 +15,21 @@
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
 
 import Numerics
+#if canImport(ReflectionMirror)
+@_spi(Reflection) import ReflectionMirror
+#else
 @_spi(Reflection) import Swift
+#endif
 
 extension ElementaryFunctions {
   internal static func visitChildren(
     _ body: (PartialKeyPath<Self>, ElementaryFunctionsVisit.Type) -> Void
   ) {
+#if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
     guard #available(macOS 9999, *) else {
       fatalError("\(#function) is unavailable")
     }
+#endif
 
     if !_forEachFieldWithKeyPath(
       of: Self.self,

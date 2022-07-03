@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(Differentiation)
+import Differentiation
+#else
 import _Differentiation
+#endif
 
 #if !SR15884_WORKAROUND_1
 /// An input to a recurrent neural network.
@@ -239,6 +243,8 @@ public struct LSTMCell<Scalar: TensorFlowFloatingPoint>: RecurrentLayerCell {
       Self(cell: lhs.cell * rhs.cell, hidden: lhs.hidden * rhs.hidden)
     }
 
+    // Causes a compiler crash on release toolchains.
+#if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
     /// Stack two values.
     @differentiable(reverse)
     public static func stack(_ lhs: Self, _ rhs: Self) -> Self {
@@ -253,6 +259,20 @@ public struct LSTMCell<Scalar: TensorFlowFloatingPoint>: RecurrentLayerCell {
       }
       return Self(cell: cell, hidden: hidden)
     }
+#else
+    public static func stack(_ lhs: Self, _ rhs: Self) -> Self {
+      // TODO(TF-1005): Remove workaround for differenting stacking.
+      let stackCell = Tensor(stacking: [lhs.cell, rhs.cell])
+      let stackHidden = Tensor(stacking: [lhs.hidden, rhs.hidden])
+      let cell = stackCell.withDerivative { [shape = stackCell.shape] in
+          if $0 == Tensor(0) { $0 = Tensor(zeros: shape) }
+      }
+      let hidden = stackHidden.withDerivative { [shape = stackHidden.shape] in
+          if $0 == Tensor(0) { $0 = Tensor(zeros: shape) }
+      }
+      return Self(cell: cell, hidden: hidden)
+    }
+#endif
   }
 
   /// Returns a zero-valued state with shape compatible with the provided input.
@@ -489,9 +509,14 @@ public protocol Mergeable: Differentiable, AdditiveArithmetic {
   @differentiable(reverse)
   static func multiply(_ lhs: Self, _ rhs: Self) -> Self
 
+  // Causes a compiler crash on release toolchains.
+#if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
   /// Stack two values.
   @differentiable(reverse)
   static func stack(_ lhs: Self, _ rhs: Self) -> Self
+#else
+  static func stack(_ lhs: Self, _ rhs: Self) -> Self
+#endif
 }
 
 extension Tensor: Mergeable where Scalar: TensorFlowFloatingPoint {
@@ -523,6 +548,8 @@ extension Tensor: Mergeable where Scalar: TensorFlowFloatingPoint {
     lhs * rhs
   }
 
+  // Causes a compiler crash on release toolchains.
+#if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
   /// Stack two values.
   @differentiable(reverse)
   public static func stack(_ lhs: Tensor, _ rhs: Tensor) -> Tensor {
@@ -532,6 +559,15 @@ extension Tensor: Mergeable where Scalar: TensorFlowFloatingPoint {
         if $0 == Tensor(0) { $0 = Tensor(zeros: shape) }
     }
   }
+#else
+  public static func stack(_ lhs: Tensor, _ rhs: Tensor) -> Tensor {
+    // TODO(TF-1005): Remove workaround for differenting stacking.
+    let stack = Tensor(stacking: [lhs, rhs])
+    return stack.withDerivative { [shape = stack.shape] in
+        if $0 == Tensor(0) { $0 = Tensor(zeros: shape) }
+    }
+  }
+#endif
 }
 
 /// Concatenates two values.
@@ -570,6 +606,8 @@ public func multiply<T: Mergeable>(
   T.multiply(first, second)
 }
 
+// Causes a compiler crash on release toolchains.
+#if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
 /// Stack two values.
 @differentiable(reverse)
 public func stack<T: Mergeable>(
@@ -578,6 +616,14 @@ public func stack<T: Mergeable>(
 ) -> T {
   T.stack(first, second)
 }
+#else
+public func stack<T: Mergeable>(
+  _ first: T,
+  _ second: T
+) -> T {
+  T.stack(first, second)
+}
+#endif
 
 public struct BidirectionalRecurrentLayer<Cell: RecurrentLayerCell>: Layer
 where Cell.TimeStepOutput: Mergeable {
