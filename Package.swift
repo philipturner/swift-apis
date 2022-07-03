@@ -34,7 +34,6 @@ if ProcessInfo.processInfo.environment["TENSORFLOW_USE_RELEASE_TOOLCHAIN"] != ni
     .product(name: "_Differentiation", package: "differentiation"),
     .product(name: "ReflectionMirror", package: "swift-reflection-mirror"),
   ]
-  fatalError()
 }
 
 let package = Package(
