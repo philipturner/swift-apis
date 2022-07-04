@@ -246,7 +246,7 @@ where Element: Differentiable {
 
   @inlinable
   public mutating func replaceSubrange<C>(_ subrange: Range<Self.Index>, with newElements: C) where C : Collection, Self.Element == C.Element {
-    fatalError("withUnsafeBufferPointer unimplemented because TensorBuffer is abstract")
+    self[subrange] = Self.SubSequence(newElements)
   }
 
   @inlinable
