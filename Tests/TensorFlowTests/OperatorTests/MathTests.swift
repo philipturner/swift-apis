@@ -56,7 +56,7 @@ final class MathOperatorTests: XCTestCase {
     testElementaryFunction(name: "log2", log2, Float.log2)
     testElementaryFunction(name: "log10", log10, Float.log10)
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
-    testElementaryFunction(name: "log1p", log1p, {Float.log(onePlus: $0)})
+    testElementaryFunction(name: "log1p", log1p, { Float.log(onePlus: $0) })
 #else
     testElementaryFunction(name: "log1p", log1p, Float.log1p)
 #endif

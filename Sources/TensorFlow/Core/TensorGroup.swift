@@ -348,11 +348,11 @@ extension Array: TensorArrayProtocol where Element: TensorGroup {
 #endif
 
 func reflectionInit<T>(type: T.Type, body: (inout T, PartialKeyPath<T>) -> Void) -> T {
-#if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
+  #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
   guard #available(macOS 9999, *) else {
     fatalError("\(#function) is unavailable")
   }
-#endif
+  #endif
 
   let x = UnsafeMutablePointer<T>.allocate(capacity: 1)
   defer { x.deallocate() }
@@ -367,11 +367,11 @@ func reflectionInit<T>(type: T.Type, body: (inout T, PartialKeyPath<T>) -> Void)
 
 extension TensorGroup {
   public static var _typeList: [TensorDataType] {
-#if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
+    #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
     guard #available(macOS 9999, *) else {
       fatalError("\(#function) is unavailable")
     }
-#endif
+    #endif
 
     var out = [TensorDataType]()
     if !(_forEachFieldWithKeyPath(of: Self.self) { name, kp in
@@ -408,11 +408,11 @@ extension TensorGroup {
   }
 
   public func _unpackTensorHandles(into address: UnsafeMutablePointer<CTensorHandle>?) {
-#if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
+    #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
     guard #available(macOS 9999, *) else {
       fatalError("\(#function) is unavailable")
     }
-#endif
+    #endif
 
     var i = 0
     if !_forEachFieldWithKeyPath(of: Self.self, body: { name, kp in

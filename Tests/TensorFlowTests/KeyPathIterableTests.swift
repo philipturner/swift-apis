@@ -97,7 +97,7 @@ final class KeyPathIterableTests: XCTestCase {
 
     XCTAssertEqual([\NestedKPI.simple, \NestedKPI.mixed], x.allKeyPaths)
     // Causes a runtime segfault on release toolchains.
-#if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
+    #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
     XCTAssertEqual(
       [
         \NestedKPI.simple, \NestedKPI.simple.w, \NestedKPI.simple.b,
@@ -105,7 +105,7 @@ final class KeyPathIterableTests: XCTestCase {
         \NestedKPI.mixed.float, \NestedKPI.mixed.int,
       ],
       x.recursivelyAllKeyPaths)
-#endif
+    #endif
 
     XCTAssertEqual([], x.allKeyPaths(to: Float.self))
     XCTAssertEqual([], x.allKeyPaths(to: Int.self))
@@ -116,7 +116,7 @@ final class KeyPathIterableTests: XCTestCase {
     XCTAssertEqual([], x.allWritableKeyPaths(to: String.self))
 
     // Causes a runtime segfault on release toolchains.
-#if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
+    #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
     XCTAssertEqual(
       [\NestedKPI.simple.w, \NestedKPI.simple.b, \NestedKPI.mixed.float],
       x.recursivelyAllKeyPaths(to: Float.self))
@@ -138,7 +138,7 @@ final class KeyPathIterableTests: XCTestCase {
       simple: SimpleKPI(w: 1, b: 2),
       mixed: MixedKPI(string: "foo", float: 300, int: 0))
     XCTAssertEqual(expected, x)
-#endif
+    #endif
   }
 
   func testComplexNested() {
@@ -160,7 +160,7 @@ final class KeyPathIterableTests: XCTestCase {
     let key1 = (x.dictionary.keys.map {$0})[0]
     let key2 = (x.dictionary.keys.map {$0})[1]
     // Causes a runtime segfault on release toolchains.
-#if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
+    #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
     XCTAssertEqual(
       [
         \ComplexNestedKPI.float,
@@ -228,7 +228,7 @@ final class KeyPathIterableTests: XCTestCase {
         "bar": SimpleKPI(w: 4, b: 5),
       ])
     XCTAssertEqual(expected, x)
-#endif
+    #endif
   }
 
   static var allTests = [

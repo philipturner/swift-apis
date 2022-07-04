@@ -496,7 +496,7 @@ final class TensorAutoDiffTests: XCTestCase {
 
   func testTensorInitStacking() {
     // Causes a compiler crash on release toolchains.
-#if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
+    #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
     let a1 = Tensor<Float>([1, 2, 3, 4, 5])
     let b1 = Tensor<Float>([6, 7, 8, 9, 10])
     let a2 = Tensor<Float>([1, 1, 1, 1, 1])
@@ -506,7 +506,7 @@ final class TensorAutoDiffTests: XCTestCase {
     }
     XCTAssertEqual(a1, grads.0)
     XCTAssertEqual(b1, grads.1)
-#endif
+    #endif
   }
 
   func testExpandingShape() {
