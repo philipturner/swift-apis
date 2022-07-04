@@ -51,6 +51,12 @@ public protocol KeyPathIterable: _KeyPathIterableBase {
 
 public extension KeyPathIterable {
   var allKeyPaths: [PartialKeyPath<Self>] {
+    #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
+    guard #available(macOS 9999, *) else {
+      fatalError("\(#function) is unavailable")
+    }
+    #endif
+    
     var out = [PartialKeyPath<Self>]()
     _forEachFieldWithKeyPath(of: Self.self, options: .ignoreUnknown) { name, kp in
       out.append(kp)
