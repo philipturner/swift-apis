@@ -172,8 +172,7 @@ public func _defaultLossFunction(_ ŷ: Tensor<Float>, _ y: Tensor<Int32>) -> Ten
 public class ThreadState<Model: Layer, Opt: Optimizer>
 where
   Opt.Model == Model, Opt.Scalar == Float, Model.Input == Tensor<Float>,
-  Model.Output == Tensor<Float>,
-  Model.TangentVector.VectorSpaceScalar == Float
+  Model.Output == Tensor<Float>
 {
   public var classifier: Model
   public var optimizer: Opt
