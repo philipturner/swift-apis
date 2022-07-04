@@ -25,12 +25,6 @@ extension ElementaryFunctions {
   internal static func visitChildren(
     _ body: (PartialKeyPath<Self>, ElementaryFunctionsVisit.Type) -> Void
   ) {
-    #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
-    guard #available(macOS 9999, *) else {
-      fatalError("\(#function) is unavailable")
-    }
-    #endif
-
     if !_forEachFieldWithKeyPath(
       of: Self.self,
       body: { name, kp in
