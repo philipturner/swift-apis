@@ -7039,6 +7039,14 @@ final class LayerTests: XCTestCase {
       .reshaped(to: [2, 2, 1, 6])
     let layer = InstanceNorm<Float>(featureCount: 6)
     let output = layer(tensor)
+    #if os(macOS) && arch(arm64)
+    let expected: Tensor<Float> =
+      [[[[ -0.9999445,  -0.9999445, -0.99994457,  -0.9999445, -0.99994445, -0.99994445]],
+        [[  0.9999445,  0.99994445,  0.99994445,  0.99994457,   0.9999447,  0.99994445]]],
+       [[[-0.99994445,  -0.9999447,  -0.9999447,  -0.9999447,  -0.9999447,  -0.9999447]],
+        [[  0.9999447,   0.9999447,   0.9999447,   0.9999442,   0.9999442,   0.9999442]]]]
+    #else
+    // May fail on platforms besides Ubuntu + x86_64 + CPU-only.
     let expected: Tensor<Float> = [
       [
         [[-0.99994445, -0.99994445, -0.9999444, -0.99994445, -0.9999443, -0.99994445]],
@@ -7049,6 +7057,7 @@ final class LayerTests: XCTestCase {
         [[0.9999447, 0.9999442, 0.9999442, 0.9999442, 0.9999447, 0.9999447]]
       ]
     ]
+    #endif
     XCTAssertEqual(output, expected)
     let grad = gradient(at: tensor, layer) { $1($0).squared().sum() }
     let expectedGrad: Tensor<Float> = [

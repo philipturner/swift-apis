@@ -637,7 +637,16 @@ final class TensorAutoDiffTests: XCTestCase {
 
   func testLogSoftmax() {
     let pb = pullback(at: Tensor(ones: [3, 3])) { (a: Tensor<Float>) in logSoftmax(a) }
+    #if os(macOS) && arch(arm64)
+    XCTAssertEqual(
+      pb(Tensor(ones: [3, 3])),
+      [[          0.0,           0.0,           0.0],
+       [          0.0,           0.0,           0.0],
+       [          0.0,           0.0, 5.9604645e-08]])
+    #else
+    // May fail on platforms besides Ubuntu + x86_64 + CPU-only.
     XCTAssertEqual(pb(Tensor(ones: [3, 3])), Tensor(repeating: 5.9604645e-08, shape: [3, 3]))
+    #endif
   }
 
   // SR-9804
@@ -972,6 +981,22 @@ final class TensorAutoDiffTests: XCTestCase {
     // print(t.gradient(y, x))
     // ```
 
+    #if os(macOS) && arch(arm64)
+    XCTAssertEqual(
+      computedGradient,
+      [[[[ 0.5665256,  0.5665256,  0.5665256],
+         [0.37230682, 0.37230682, 0.37230682],
+         [0.56652546, 0.56652546, 0.56652546]],
+
+        [[0.37230682, 0.37230682, 0.37230682],
+         [0.24467096, 0.24467096, 0.24467096],
+         [0.37230676, 0.37230676, 0.37230676]],
+
+        [[0.56652546, 0.56652546, 0.56652546],
+         [0.37230676, 0.37230676, 0.37230676],
+         [ 0.5665254,  0.5665254,  0.5665254]]]])
+    #else
+    // May fail on platforms besides Ubuntu + x86_64 + CPU-only.
     XCTAssertEqual(
       computedGradient,
       [
@@ -993,6 +1018,7 @@ final class TensorAutoDiffTests: XCTestCase {
           ],
         ]
       ])
+    #endif
   }
 
   func testResizeLanczos5() {
@@ -1010,7 +1036,23 @@ final class TensorAutoDiffTests: XCTestCase {
     //     y = tf.image.resize(x, [2, 2], "lanczos5")
     // print(t.gradient(y, x))
     // ```
+    
+    #if os(macOS) && arch(arm64)
+    XCTAssertEqual(
+      computedGradient,
+      [[[[ 0.5368068,  0.5368068,  0.5368068],
+         [0.39172834, 0.39172834, 0.39172834],
+         [ 0.5368068,  0.5368068,  0.5368068]],
 
+        [[0.39172834, 0.39172834, 0.39172834],
+         [0.28585908, 0.28585908, 0.28585908],
+         [0.39172834, 0.39172834, 0.39172834]],
+
+        [[ 0.5368068,  0.5368068,  0.5368068],
+         [0.39172834, 0.39172834, 0.39172834],
+         [ 0.5368068,  0.5368068,  0.5368068]]]])
+    #else
+    // May fail on platforms besides Ubuntu + x86_64 + CPU-only.
     XCTAssertEqual(
       computedGradient,
       [
@@ -1032,6 +1074,7 @@ final class TensorAutoDiffTests: XCTestCase {
           ],
         ]
       ])
+    #endif
   }
 
   func testResizeGaussian() {

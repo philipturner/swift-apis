@@ -177,7 +177,13 @@ final class MathOperatorTests: XCTestCase {
   func testRsqrt() {
     let x = Tensor<Double>([1, 0.25, 1.0 / 9.0, 0.0625, 0.04])
     let target = Tensor<Double>([1, 2, 3, 4, 5]).sum()
+    #if os(macOS) && arch(arm64)
+    let gradTarget = Tensor<Double>(
+      [-0.49999999999999983, -3.9999999999999987, -13.5, -31.99999999999999, -62.5])
+    #else
+    // May fail on platforms besides Ubuntu + x86_64 + CPU-only.
     let gradTarget = Tensor<Double>([-0.5, -4.0, -13.5, -32.0, -62.5])
+    #endif
     let (value, grad) = valueWithGradient(at: x) { rsqrt($0).sum() }
     XCTAssertEqual(value, target)
     XCTAssertEqual(grad, gradTarget)
@@ -219,7 +225,12 @@ final class MathOperatorTests: XCTestCase {
   func testSoftplus() {
     let x = Tensor<Float>([1.0, 2.0, 3.0])
     let y = softplus(x)
+    #if os(macOS) && arch(arm64)
+    let expectedY = Tensor<Float>([1.3132616, 2.126928, 3.048587])
+    #else
+    // May fail on platforms besides Ubuntu + x86_64 + CPU-only.
     let expectedY = Tensor<Float>([1.3132616, 2.126928, 3.0485873])
+    #endif
     XCTAssertEqual(y, expectedY)
   }
 
