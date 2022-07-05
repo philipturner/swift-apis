@@ -132,7 +132,6 @@ let package = Package(
         "x10_optimizers_tensor_visitor_plan",
         "TensorFlow"
       ],
-      exclude: ["ops_test.swift"],
       swiftSettings: conditionalSwiftSettings),
   ]
 )

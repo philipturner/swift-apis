@@ -163,16 +163,6 @@ public protocol Layer: Module where Input: Differentiable {
   func callAsFunction(_ input: Input) -> Output
 }
 
-
-// extension Layer where Input: DifferentiableTensorProtocol, Output: DifferentiableTensorProtocol {
-//   // Workaround for SR-13455: autodiff undefined symbol linker error.
-//   @differentiable(reverse, wrt: self)
-//   public func callAsFunction(_ input: Input) -> Output {
-//     let activation = callAsFunction(input)
-//     return annotated(activation)
-//   }
-// }
-
 /// An empty struct representing empty `TangentVector`s for parameterless layers.
 public struct EmptyTangentVector: EuclideanDifferentiable, VectorProtocol, ElementaryFunctions,
   PointwiseMultiplicative, KeyPathIterable
@@ -194,11 +184,12 @@ public struct EmptyTangentVector: EuclideanDifferentiable, VectorProtocol, Eleme
 ///
 /// The `TangentVector` of parameterless layers is always `EmptyTangentVector`.
 public protocol ParameterlessLayer: Layer where TangentVector == EmptyTangentVector {
-  @differentiable(reverse) func callAsFunction(_ input: Input) -> Output
+  @differentiable(reverse)
+  func callAsFunction(_ input: Input) -> Output
 }
 
 extension ParameterlessLayer {
-  public mutating func move(by direction: EmptyTangentVector) {}
+  public mutating func move(by offset: EmptyTangentVector) {}
   public var differentiableVectorView: EmptyTangentVector { EmptyTangentVector() }
 }
 

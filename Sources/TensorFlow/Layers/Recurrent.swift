@@ -609,7 +609,8 @@ public struct BidirectionalRecurrentLayer<Cell: RecurrentLayerCell>: Layer
 where Cell.TimeStepOutput: Mergeable {
   public typealias Input = [Cell.TimeStepInput]
   public typealias Output = [Cell.TimeStepOutput]
-  public typealias MergeFunction = @differentiable(reverse) (Cell.TimeStepOutput, Cell.TimeStepOutput) -> Cell.TimeStepOutput
+  public typealias MergeFunction =
+    @differentiable(reverse) (Cell.TimeStepOutput, Cell.TimeStepOutput) -> Cell.TimeStepOutput
 
   /// A wrapper around a `@differentiable` merge function.
   ///

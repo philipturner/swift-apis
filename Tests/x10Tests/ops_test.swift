@@ -9,10 +9,32 @@ import XCTest
 @_silgen_name("SetMatMulPrecision")
 internal func SetMatMulPrecision(_: Bool) -> Void
 
-setenv("XLA_FLAGS", "--xla_cpu_fast_math_honor_nans=true --xla_cpu_fast_math_honor_infs=true", 1)
-SetMatMulPrecision(true)
-let x10 = Device.defaultXLA
-let tf = Device.defaultTFEager
+// Copied from Runtime.swift:
+#if os(Windows)
+  // NOTE: although the function is racy, we do not really care as the
+  // usage here is to not override the value if the user specified one before
+  // creating the process.
+  @discardableResult
+  private func setenv(_ variable: String, _ value: String, _ `override`: Int) -> Int {
+    guard `override` > 0 || getenv(variable) == nil else { return 0 }
+    return Int(_putenv_s(variable, value))
+  }
+#endif
+
+private var environmentConfigured = {
+  setenv("XLA_FLAGS", "--xla_cpu_fast_math_honor_nans=true --xla_cpu_fast_math_honor_infs=true", 1)
+  SetMatMulPrecision(true)
+  return true
+}()
+
+let x10 = {
+  _ = environmentConfigured
+  return Device.defaultXLA
+}()
+let tf = {
+  _ = environmentConfigured
+  return Device.defaultTFEager
+}()
 
 private func X10<T>(_ x: Tensor<T>) -> Tensor<T> {
   return Tensor<T>(copying: x, to: x10)
@@ -575,6 +597,7 @@ final class TensorTests: XCTestCase {
     }
   }
 
+  #if FALLBACK_X10_BINARY
   func testBF16Conv2D() {
     let inChannels = 1
     let batchSize = 1
@@ -609,6 +632,7 @@ final class TensorTests: XCTestCase {
         actual: TF(outputViaBF16), expected: TF(output), relTolerance: 1e-2)
     )
   }
+  #endif
 
   func testBF16Construct() {
     let scalars: [Float] = [1, 2, 3, 4, 5, 6]
@@ -622,6 +646,7 @@ final class TensorTests: XCTestCase {
     XCTAssertEqual(TF(actual), expected)
   }
 
+  #if FALLBACK_X10_BINARY
   func testBF16GradientPropagation() {
     let inChannels = 1
     let batchSize = 1
@@ -711,6 +736,7 @@ final class TensorTests: XCTestCase {
     let outputViaBF16 = outputBF16.toFullPrecision
     XCTAssert(allClose(actual: TF(outputViaBF16), expected: TF(output), relTolerance: 1e-2))
   }
+  #endif
 
   func testBroadcastDims() throws {
     for useReducedPrecision in [false, true] {
@@ -2068,7 +2094,12 @@ final class TensorTests: XCTestCase {
         actual = actual.toFullPrecision
       }
       XCTAssert(!actual.isReducedPrecision)
+      #if os(macOS) && arch(arm64)
+      let relTolerance: Float = useReducedPrecision ? 7e-2 : 1e-4
+      #else
+      // May fail on platforms besides Ubuntu + x86_64 + CPU-only.
       let relTolerance: Float = useReducedPrecision ? 5e-2 : 1e-4
+      #endif
       XCTAssert(
         allClose(
           actual: TF(actual), expected: expected, relTolerance: relTolerance, absTolerance: 1e-4))

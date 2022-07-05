@@ -1302,6 +1302,7 @@ extension Tensor {
   }
 
   @inlinable
+  // An internal workaround for apple/swift#59135: did not create differentiability witness.
   // @differentiable(reverse, wrt: self where Scalar: TensorFlowFloatingPoint)
   internal subscript(_ indexPath: IndexPath) -> Tensor {
     get {
@@ -1328,7 +1329,7 @@ extension Tensor {
   }
 
   @inlinable
-  // @differentiable(reverse, wrt: self where Scalar: TensorFlowFloatingPoint)
+  @differentiable(reverse, wrt: self where Scalar: TensorFlowFloatingPoint)
   public subscript(_ ranges: TensorRangeExpression...) -> Tensor {
     get {
       return self[{ IndexPath({ ranges.map { $0.tensorRange } }()) }()]
@@ -1339,27 +1340,27 @@ extension Tensor {
   }
 }
 
-// extension Tensor {
-//   @usableFromInline
-//   @derivative(of: subscript)
-//   internal func _vjpSubscript(
-//     _ indexPath: IndexPath
-//   ) -> (value: Tensor, pullback: (Tensor) -> Tensor) {
-//     return (
-//       self[indexPath],
-//       { [shape = shapeTensor] v in
-//         _Raw.stridedSliceGrad(
-//           shape: shape, begin: Tensor<Int32>(indexPath.begin, on: device),
-//           end: Tensor<Int32>(indexPath.end, on: device),
-//           strides: Tensor<Int32>(indexPath.strides, on: device), dy: v,
-//           beginMask: indexPath.beginMask,
-//           endMask: indexPath.endMask, ellipsisMask: indexPath.ellipsisMask,
-//           newAxisMask: indexPath.newAxisMask,
-//           shrinkAxisMask: indexPath.squeezeAxisMask)
-//       }
-//     )
-//   }
-// }
+extension Tensor where Scalar: TensorFlowFloatingPoint {
+  @usableFromInline
+  @derivative(of: subscript)
+  internal func _vjpSubscript(
+    _ indexPath: IndexPath
+  ) -> (value: Tensor, pullback: (Tensor) -> Tensor) {
+    return (
+      self[indexPath],
+      { [shape = shapeTensor] v in
+        _Raw.stridedSliceGrad(
+          shape: shape, begin: Tensor<Int32>(indexPath.begin, on: device),
+          end: Tensor<Int32>(indexPath.end, on: device),
+          strides: Tensor<Int32>(indexPath.strides, on: device), dy: v,
+          beginMask: indexPath.beginMask,
+          endMask: indexPath.endMask, ellipsisMask: indexPath.ellipsisMask,
+          newAxisMask: indexPath.newAxisMask,
+          shrinkAxisMask: indexPath.squeezeAxisMask)
+      }
+    )
+  }
+}
 
 extension Tensor.IndexPath {
   @inlinable
