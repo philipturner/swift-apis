@@ -642,7 +642,7 @@ final class MathOperatorTests: XCTestCase {
     }
     let x = Tensor<Float>(ones: [1, 2, 1, 4])
     let y = Tensor<Float>(ones: [4, 1, 3, 1])
-    let (dx, dy) = gradient(at: x, y, in: foo)
+    let (dx, dy) = gradient(at: x, y, of: foo)
     XCTAssertEqual(x.shape, dx.shape)
     XCTAssertEqual(y.shape, dy.shape)
   }

@@ -575,7 +575,7 @@ final class TensorTests: XCTestCase {
       for useReducedPrecision in [false, true] {
         let 𝛁tfModel = gradient(
           at: tfModel,
-          in: { tfModel -> Tensor<Float> in
+          of: { tfModel -> Tensor<Float> in
             tfModel(TF(x)).sum()
           })
         if useReducedPrecision {
@@ -584,7 +584,7 @@ final class TensorTests: XCTestCase {
         }
         let 𝛁model = gradient(
           at: model,
-          in: { model -> Tensor<Float> in
+          of: { model -> Tensor<Float> in
             model(x).sum()
           })
         XCTAssertEqual(𝛁model.offset.isReducedPrecision, useReducedPrecision)
@@ -672,14 +672,14 @@ final class TensorTests: XCTestCase {
     let mixedPrecisionModel = model.toReducedPrecision
     let 𝛁model = gradient(
       at: mixedPrecisionModel,
-      in: { mixedPrecisionModel -> Tensor<Float> in
+      of: { mixedPrecisionModel -> Tensor<Float> in
         let ŷ = mixedPrecisionModel(inputBF16)
         let loss = ŷ.sum()
         return loss
       })
     let 𝛁modelViaBF16 = gradient(
       at: model,
-      in: { model -> Tensor<Float> in
+      of: { model -> Tensor<Float> in
         let ŷ = model(inputF32)
         let loss = ŷ.sum()
         return loss

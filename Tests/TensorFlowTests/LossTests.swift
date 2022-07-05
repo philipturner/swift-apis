@@ -89,7 +89,7 @@ final class LossTests: XCTestCase {
 
     let gradients = gradient(
       at: predicted,
-      in: { meanSquaredError(predicted: $0, expected: expected) })
+      of: { meanSquaredError(predicted: $0, expected: expected) })
 
     assertEqual(gradients, expectedGradients, accuracy: 1e-6)
   }
@@ -181,7 +181,7 @@ final class LossTests: XCTestCase {
     let expectedGradients = expectedGradientsBeforeMean / Float(logits.shape[0])
     let gradients = gradient(
       at: logits,
-      in: { softmaxCrossEntropy(logits: $0, probabilities: labels) })
+      of: { softmaxCrossEntropy(logits: $0, probabilities: labels) })
     assertEqual(gradients, expectedGradients, accuracy: 1e-6)
   }
 
@@ -205,7 +205,7 @@ final class LossTests: XCTestCase {
 
     let computedGradient = gradient(
       at: logits,
-      in: { sigmoidCrossEntropy(logits: $0, labels: labels) })
+      of: { sigmoidCrossEntropy(logits: $0, labels: labels) })
     // The expected value of the gradient was computed using Python TensorFlow 1.14 with
     // the following code:
     // ```
