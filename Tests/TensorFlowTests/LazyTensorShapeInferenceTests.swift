@@ -98,10 +98,4 @@ final class LazyTensorShapeInferenceTests: LazyTensorTestCase {
     XCTAssertEqual(result.shape, [2, 2])
     XCTAssertTrue(mLazyTensorOperation.isMaterialized)
   }
-
-  static var allTests = [
-    ("testSimpleShapeComputations", testSimpleShapeComputations),
-    ("testShapeComputationsWithInputTensors", testShapeComputationsWithInputTensors),
-    ("testNoMaterialization", testNoMaterialization),
-  ]
 }

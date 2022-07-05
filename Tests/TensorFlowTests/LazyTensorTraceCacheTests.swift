@@ -123,9 +123,4 @@ final class LazyTensorTraceCacheTests: LazyTensorTestCase {
     let lazyOperation = lazyTensorOperation(input)!
     return LazyTensorTraceBuilder.materializationTraceInfo(lazyOperation).trace
   }
-
-  static var allTests = [
-    ("testConstPromotion", testConstPromotion),
-    ("testDoNotPromoteEqualConstants", testDoNotPromoteEqualConstants),
-  ]
 }

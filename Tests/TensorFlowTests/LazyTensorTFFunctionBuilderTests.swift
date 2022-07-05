@@ -241,11 +241,4 @@ final class LazyTensorTFFunctionBuilderTests: LazyTensorTestCase {
     let traceInfo = LazyTensorTraceBuilder.materializationTraceInfo(lazyOp)
     return traceInfo.trace
   }
-
-  static var allTests = [
-    ("testSingletonInputs", testSingletonInputs),
-    ("testListInputs", testListInputs),
-    ("testSequence", testSequence),
-    ("testAttributes", testAttributes),
-  ]
 }

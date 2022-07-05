@@ -169,11 +169,4 @@ final class LazyTensorHandleTests: XCTestCase {
     case .concrete(_, let isMaterialized): return isMaterialized
     }
   }
-
-  static var allTests = [
-    ("testConstructions", testConstructions),
-    ("testLazyTensorOperationProperty", testLazyTensorOperationProperty),
-    ("testLivenessTracking", testLivenessTracking),
-    ("testTensorToLazyTensorConversions", testTensorToLazyTensorConversions),
-  ]
 }

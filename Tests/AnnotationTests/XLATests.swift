@@ -75,15 +75,3 @@ final class AnnotationXLATests: XCTestCase {
     XCTAssert(validateAnnotations(annotations))
   }
 }
-
-extension AnnotationXLATests {
-  static var allTests = [
-    ("testLayerSummaryTensor", testLayerSummaryTensor),
-    ("testTensorAnnotations", testTensorAnnotations),
-    ("testTensorAnnotationsSummary", testTensorAnnotationsSummary),
-  ]
-}
-
-XCTMain([
-  testCase(AnnotationXLATests.allTests)
-])

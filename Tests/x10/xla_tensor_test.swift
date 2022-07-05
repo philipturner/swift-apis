@@ -24,14 +24,6 @@ final class XLATensorTests: XCTestCase {
   }
 }
 
-extension XLATensorTests {
-  static var allTests = [
-    ("testLazyTensorBarrier", testLazyTensorBarrier),
-    ("testAnnotationsTFEager", testAnnotationsTFEager),
-    ("testAnnotationsXLA", testAnnotationsXLA),
-  ]
-}
-
 final class MultiDeviceAPITests: XCTestCase {
   func testGetAllDevices() {
     XCTAssertFalse(Device.allDevices.isEmpty)
@@ -99,19 +91,3 @@ final class MultiDeviceAPITests: XCTestCase {
     XCTAssertEqual(res.scalarized(), 63)
   }
 }
-
-extension MultiDeviceAPITests {
-  static var allTests = [
-    ("testGetAllDevices", testGetAllDevices),
-    ("testTensorDevice", testTensorDevice),
-    ("testSetGetReplication", testSetGetReplication),
-    ("testSyncLiveTensors", testSyncLiveTensors),
-    ("testCrossReplicaSum", testCrossReplicaSum),
-    ("testFunctionalWhile", testFunctionalWhile),
-  ]
-}
-
-XCTMain([
-  testCase(XLATensorTests.allTests),
-  testCase(MultiDeviceAPITests.allTests),
-])

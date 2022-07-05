@@ -247,31 +247,4 @@ final class LossTests: XCTestCase {
       assertEqual(loss, Tensor(0.62500006), accuracy: 1e-6)
     }
   }
-
-  static var allTests = [
-    ("testL1Loss", testL1Loss),
-    ("testL2Loss", testL2Loss),
-    ("testMeanSquaredErrorLoss", testMeanSquaredErrorLoss),
-    ("testMeanSquaredErrorGrad", testMeanSquaredErrorGrad),
-    ("testMeanSquaredLogarithmicError", testMeanSquaredLogarithmicError),
-    ("testMeanAbsoluteError", testMeanAbsoluteError),
-    ("testMeanAbsolutePercentageError", testMeanAbsolutePercentageError),
-    ("testHingeLoss", testHingeLoss),
-    ("testKullbackLeiblerDivergence", testKullbackLeiblerDivergence),
-    ("testCategoricalHingeLoss", testCategoricalHingeLoss),
-    ("testSquaredHingeLoss", testSquaredHingeLoss),
-    ("testPoissonLoss", testPoissonLoss),
-    ("testLogCoshLoss", testLogCoshLoss),
-    (
-      "testSoftmaxCrossEntropyWithProbabilitiesLoss",
-      testSoftmaxCrossEntropyWithProbabilitiesLoss
-    ),
-    (
-      "testSoftmaxCrossEntropyWithProbabilitiesGrad",
-      testSoftmaxCrossEntropyWithProbabilitiesGrad
-    ),
-    ("testSigmoidCrossEntropyLoss", testSigmoidCrossEntropyLoss),
-    ("testSigmoidCrossEntropyGradient", testSigmoidCrossEntropyGradient),
-    ("testHuberLoss", testHuberLoss),
-  ]
 }

@@ -126,12 +126,4 @@ final class LazyTensorEvaluationTests: LazyTensorTestCase {
     default: return false
     }
   }
-
-  static var allTests = [
-    ("testSimpleOperations", testSimpleOperations),
-    ("testMultipleMaterializations", testMultipleMaterializations),
-    ("testSimpleControlFlow", testSimpleControlFlow),
-    ("testSimpleLoop", testSimpleLoop),
-    ("testNoOutputOperations", testNoOutputOperations),
-  ]
 }

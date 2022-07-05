@@ -87,15 +87,3 @@ final class TensorVisitorPlanTests: XCTestCase {
         upper: \Classifier.TangentVector.layers[4]))
   }
 }
-
-extension TensorVisitorPlanTests {
-  static var allTests = [
-    ("testBasic", testBasic),
-    ("testMask", testMask),
-    ("testAllKeysBetween", testAllKeysBetween),
-  ]
-}
-
-XCTMain([
-  testCase(TensorVisitorPlanTests.allTests)
-])

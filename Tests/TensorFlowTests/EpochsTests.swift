@@ -394,18 +394,3 @@ final class EpochsTests: XCTestCase {
     }
   }
 }
-
-extension EpochsTests {
-  static var allTests = [
-    ("testAllPadding", testAllPadding),
-    ("testInBatchesIsLazy", testInBatchesIsLazy),
-    ("testBaseUse", testBaseUse),
-    ("testTrainingEpochsShuffles", testTrainingEpochsShuffles),
-    ("testTrainingEpochsShapes", testTrainingEpochsShapes),
-    ("testTrainingEpochsIsLazy", testTrainingEpochsIsLazy),
-    ("testLanguageModel", testLanguageModel),
-    ("testLanguageModelShuffled", testLanguageModelShuffled),
-    ("testNonuniformInferenceBatches", testNonuniformInferenceBatches),
-    ("testNonuniformTrainingEpochs", testNonuniformTrainingEpochs),
-  ]
-}

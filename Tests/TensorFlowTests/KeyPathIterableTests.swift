@@ -230,11 +230,4 @@ final class KeyPathIterableTests: XCTestCase {
     XCTAssertEqual(expected, x)
     #endif
   }
-
-  static var allTests = [
-    ("testSimple", testSimple),
-    ("testMixed", testMixed),
-    ("testSimpleNested", testSimpleNested),
-    ("testComplexNested", testComplexNested),
-  ]
 }

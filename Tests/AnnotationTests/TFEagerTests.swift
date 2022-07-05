@@ -57,15 +57,3 @@ final class AnnotationTFEagerTests: XCTestCase {
     XCTAssertEqual(annotations, Device.defaultTFEager.annotationsAvailable)
   }
 }
-
-extension AnnotationTFEagerTests {
-  static var allTests = [
-    ("testLayerSummaryTensor", testLayerSummaryTensor),
-    ("testTensorAnnotations", testTensorAnnotations),
-    ("testTensorAnnotationsSummary", testTensorAnnotationsSummary),
-  ]
-}
-
-XCTMain([
-  testCase(AnnotationTFEagerTests.allTests)
-])

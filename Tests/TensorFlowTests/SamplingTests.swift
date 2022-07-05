@@ -62,12 +62,5 @@ final class SamplingTests: XCTestCase {
     let d1 = Sampling(base: b, selection: instrumentedIndices)
     d1.checkRandomAccessCollectionConformance(
       expectedValues: b, operationCounts: instrumentedIndices.operationCounts)
-}
-
-  static var allTests = [
-    ("test_init", test_init),
-    ("test_Collection", test_Collection),
-    ("test_BidirectionalCollection", test_BidirectionalCollection),
-    ("test_RandomAccessCollection", test_RandomAccessCollection),
-  ]
+  }
 }

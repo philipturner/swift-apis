@@ -177,15 +177,4 @@ final class LazyTensorExplicitTraceTests: LazyTensorTestCase {
     let outputHandles = tffunc.execute(inputHandles)
     return outputHandles
   }
-
-  static var allTests = [
-    ("testSingleInput", testSingleInput),
-    ("testTensorGroupInputOutputs", testTensorGroupInputOutputs),
-    ("testClosureCapturesOfTensors", testClosureCapturesOfTensors),
-    ("testClosureCapturesOfNonTensors", testClosureCapturesOfNonTensors),
-    ("testNestedTracing", testNestedTracing),
-    ("testCallableTrace", testCallableTrace),
-    ("testTraceWithOutputSameAsInput", testTraceWithOutputSameAsInput),
-    ("testRetainsIdenticalOutputs", testRetainsIdenticalOutputs),
-  ]
 }

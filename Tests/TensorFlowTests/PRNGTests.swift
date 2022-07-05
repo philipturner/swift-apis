@@ -239,13 +239,4 @@ final class PRNGTests: XCTestCase {
       }
     }
   }
-
-  static var allTests = [
-    ("testARC4", testARC4),
-    ("testUniformDistribution", testUniformDistribution),
-    ("testNormalDistribution", testNormalDistribution),
-    ("testUniformIntegerDistribution", testUniformIntegerDistribution),
-    ("testThreefry", testThreefry),
-    ("testPhilox", testPhilox),
-  ]
 }

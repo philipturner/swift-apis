@@ -42,9 +42,4 @@ final class SlicesTests: XCTestCase {
     XCTAssertFalse(b.isBidirectional)
     XCTAssertFalse(b.isRandomAccess)
   }
-
-  static var allTests = [
-    ("test_init", test_init),
-    ("test_Collection", test_Collection),
-  ]
 }

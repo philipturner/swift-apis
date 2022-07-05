@@ -256,14 +256,4 @@ final class LazyTensorTraceTests: LazyTensorTestCase {
   private func lazyTrace(_ lazyOperations: [LazyTensorOperation]) -> LazyTensorTrace {
     return LazyTensorTraceBuilder.materializationTraceInfo(lazyOperations).trace
   }
-
-  static var allTests = [
-    ("testSingleLiveTensor", testSingleLiveTensor),
-    ("testMultipleLiveTensors", testMultipleLiveTensors),
-    ("testMultipleTargets", testMultipleTargets),
-    ("testSimpleControlFlow", testSimpleControlFlow),
-    ("testManualConstPromotion", testManualConstPromotion),
-    ("testConstPromotion", testConstPromotion),
-    ("testTraceWithFunctionAttributes", testTraceWithFunctionAttributes),
-  ]
 }

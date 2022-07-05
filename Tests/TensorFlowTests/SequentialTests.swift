@@ -426,33 +426,5 @@ final class SequentialTests: XCTestCase {
 // ###sourceLocation(file: "SequentialTests.swift.gyb", line: 41)
   }
 // ###sourceLocation(file: "SequentialTests.swift.gyb", line: 43)
-
-  static var allTests = [
-// ###sourceLocation(file: "SequentialTests.swift.gyb", line: 46)
-    ("testSequential2", testSequential2),
-// ###sourceLocation(file: "SequentialTests.swift.gyb", line: 46)
-    ("testSequential3", testSequential3),
-// ###sourceLocation(file: "SequentialTests.swift.gyb", line: 46)
-    ("testSequential4", testSequential4),
-// ###sourceLocation(file: "SequentialTests.swift.gyb", line: 46)
-    ("testSequential5", testSequential5),
-// ###sourceLocation(file: "SequentialTests.swift.gyb", line: 46)
-    ("testSequential6", testSequential6),
-// ###sourceLocation(file: "SequentialTests.swift.gyb", line: 46)
-    ("testSequential7", testSequential7),
-// ###sourceLocation(file: "SequentialTests.swift.gyb", line: 46)
-    ("testSequential8", testSequential8),
-// ###sourceLocation(file: "SequentialTests.swift.gyb", line: 46)
-    ("testSequential9", testSequential9),
-// ###sourceLocation(file: "SequentialTests.swift.gyb", line: 46)
-    ("testSequential10", testSequential10),
-// ###sourceLocation(file: "SequentialTests.swift.gyb", line: 48)
-  ]
-#else
-  func emptyTest() {}
-  
-  static var allTests = [
-    ("emptyTest", emptyTest)
-  ]
 #endif
 }

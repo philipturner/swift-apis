@@ -250,22 +250,4 @@ class OptimizerTests: XCTestCase {
       optimizer: optimizer, startingValues: values,
       expectedValues: [0.46914074, -0.44463903, -0.44513932])
   }
-
-  static var allTests = [
-    ("testSGD", testSGD),
-    ("testRMSProp", testRMSProp),
-    ("testAdaGrad", testAdaGrad),
-    ("testAdaDelta", testAdaDelta),
-    ("testAdam", testAdam),
-    ("testAdaMax", testAdaMax),
-    ("testAMSGrad", testAMSGrad),
-    ("testRAdam", testRAdam),
-    ("testSGDNumerical", testSGDNumerical),
-    ("testRMSPropNumerical", testRMSPropNumerical),
-    ("testAdamNumerical", testAdamNumerical),
-    ("testAdaDeltaNumerical", testAdaDeltaNumerical),
-    ("testAMSGradNumerical", testAMSGradNumerical),
-    ("testAdaMaxNumerical", testAdaMaxNumerical),
-    ("testAdaGradNumerical", testAdaGradNumerical),
-  ]
 }

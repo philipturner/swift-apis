@@ -115,6 +115,10 @@ let package = Package(
       path: "Sources/third_party/Experimental",
       swiftSettings: conditionalSwiftSettings),
     .testTarget(
+      name: "AnnotationTests",
+      dependencies: ["TensorFlow"],
+      swiftSettings: conditionalSwiftSettings),
+    .testTarget(
       name: "ExperimentalTests",
       dependencies: ["Experimental"],
       swiftSettings: conditionalSwiftSettings),
