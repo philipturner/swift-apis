@@ -207,7 +207,7 @@ final class TensorTests: XCTestCase {
   }
 
   func testAcosh() throws {
-    var x = Tensor<Float>.rand([3, 2]) + 1
+    var x = Tensor<Float>.rand([2, 2]) + 1
     let expected = acosh(TF(x))
     for useReducedPrecision in [false, true] {
       if useReducedPrecision {
@@ -446,7 +446,7 @@ final class TensorTests: XCTestCase {
     for useReducedPrecision in [false, true] {
       for stride in 1..<3 {
         for padSame in [false, true] {
-          var x = Tensor<Float>.rand([4, 28, 28, 1])
+          var x = Tensor<Float>.rand([4, 16, 16, 1])
           let expected = avgPool2D(
             TF(x), filterSize: (1, 2, 2, 1), strides: (1, stride, stride, 1),
             padding: padSame ? Padding.same : Padding.valid)
@@ -475,7 +475,7 @@ final class TensorTests: XCTestCase {
     for useReducedPrecision in [false, true] {
       for stride in 1..<3 {
         for padSame in [false, true] {
-          var x = Tensor<Float>.rand([4, 28, 28, 1])
+          var x = Tensor<Float>.rand([4, 16, 16, 1])
           let outShape = avgPool2D(
             TF(x), filterSize: (1, 2, 2, 1), strides: (1, stride, stride, 1),
             padding: padSame ? Padding.same : Padding.valid
@@ -506,7 +506,7 @@ final class TensorTests: XCTestCase {
     for useReducedPrecision in [false, true] {
       for stride in 1..<3 {
         for padSame in [false, true] {
-          var x = Tensor<Float>.rand([4, 28, 28, 28, 1])
+          var x = Tensor<Float>.rand([4, 16, 16, 16, 1])
           let outShape = avgPool3D(
             TF(x), filterSize: (1, 2, 2, 2, 1), strides: (1, stride, stride, stride, 1),
             padding: padSame ? Padding.same : Padding.valid
@@ -539,7 +539,7 @@ final class TensorTests: XCTestCase {
     for trainingPhase in [false, true] {
       Context.local.learningPhase = trainingPhase ? .training : .inference
       var model = BatchNorm<Float>(copying: BatchNorm<Float>(featureCount: featureCount), to: x10)
-      let shape = [2, 3, 4, featureCount]
+      let shape = [2, 2, 2, featureCount]
       var x = Tensor<Float>(
         shape: TensorShape(shape),
         scalars: Array(stride(from: 0.0, to: Float(shape.reduce(1, *)), by: 1)), on: x10)
@@ -565,7 +565,7 @@ final class TensorTests: XCTestCase {
   func testBatchNormGrad() throws {
     let featureCount = 3
     let tfModel = BatchNorm<Float>(copying: BatchNorm<Float>(featureCount: featureCount), to: tf)
-    let shape = [2, 3, 2, featureCount]
+    let shape = [2, 2, 2, featureCount]
     for trainingPhase in [false, true] {
       Context.local.learningPhase = trainingPhase ? .training : .inference
       var model = BatchNorm<Float>(copying: BatchNorm<Float>(featureCount: featureCount), to: x10)
@@ -876,12 +876,12 @@ final class TensorTests: XCTestCase {
 
   func testConv2D() throws {
     let inChannels = 4
-    let outChannels = 8
+    let outChannels = 4
     let kernelSize = 5
     let inputSize = 14
     let batch = 2
     for useReducedPrecision in [false, true] {
-      for stride in 1..<4 {
+      for stride in 1..<3 {
         for dilation in 1..<3 {
           for padSame in [false, true] {
             var input = Tensor<Float>.rand([batch, inputSize, inputSize, inChannels])
@@ -918,7 +918,7 @@ final class TensorTests: XCTestCase {
 
   func testConv2DGrad() throws {
     let inChannels = 4
-    let outChannels = 8
+    let outChannels = 4
     let kernelSize = 5
     let inputSize = 14
     let batch = 2
@@ -928,7 +928,7 @@ final class TensorTests: XCTestCase {
       if useReducedPrecision && Device.defaultXLA.kind == .GPU {
         continue
       }
-      for stride in 1..<4 {
+      for stride in 1..<3 {
         for padSame in [false, true] {
           var input = Tensor<Float>.rand([batch, inputSize, inputSize, inChannels])
           var filter = Tensor<Float>.rand([kernelSize, kernelSize, inChannels, outChannels])
@@ -967,12 +967,12 @@ final class TensorTests: XCTestCase {
 
   func testConv3DGrad() throws {
     let inChannels = 4
-    let outChannels = 8
+    let outChannels = 4
     let kernelSize = 5
     let inputSize = 14
     let batch = 2
     for useReducedPrecision in [false, true] {
-      for stride in 1..<4 {
+      for stride in 1..<3 {
         for padSame in [false, true] {
           var input = Tensor<Float>.rand([batch, inputSize, inputSize, inputSize, inChannels])
           var filter = Tensor<Float>.rand([
@@ -1052,7 +1052,7 @@ final class TensorTests: XCTestCase {
   func testCumprod() throws {
     for useReducedPrecision in [false, true] {
       for (exclusive, reverse) in [(false, false), (true, false), (false, true), (true, true)] {
-        var x = Tensor<Float>.rand([2, 4, 2])
+        var x = Tensor<Float>.rand([2, 2, 2])
         if useReducedPrecision {
           x = x.toReducedPrecision
         }
@@ -1074,7 +1074,7 @@ final class TensorTests: XCTestCase {
   func testCumsum() throws {
     for useReducedPrecision in [false, true] {
       for (exclusive, reverse) in [(false, false), (true, false), (false, true), (true, true)] {
-        var x = Tensor<Float>.rand([2, 4, 2])
+        var x = Tensor<Float>.rand([2, 2, 2])
         if useReducedPrecision {
           x = x.toReducedPrecision
         }
@@ -1094,14 +1094,14 @@ final class TensorTests: XCTestCase {
   }
 
   func testDepthwiseConv2DGrad() throws {
-    let inChannels = 4
+    let inChannels = 2
     let channelMultiplier = 2
     let kernelSize = 5
     let inputSize = 14
     let batch = 2
     let dilation = 1
     for useReducedPrecision in [false, true] {
-      for stride in 1..<4 {
+      for stride in 1..<3 {
         for padSame in [false, true] {
           var input = Tensor<Float>.rand([batch, inputSize, inputSize, inChannels])
           var filter = Tensor<Float>.rand([kernelSize, kernelSize, inChannels, channelMultiplier])
@@ -1157,21 +1157,18 @@ final class TensorTests: XCTestCase {
   }
 
   func testDiagonalPart() throws {
-    // TODO(b/146675105): Implement `_Raw.matrixDiagPart`, used by `Tensor.diagonalPart`.
-    #if false
-      do {
-        let x = Tensor<Float>.rand([5, 5])
-        let actual = TF(x.diagonalPart())
-        let expected = TF(x).diagonalPart()
-        XCTAssertEqual(actual, expected)
-      }
-      do {
-        let x = Tensor<Float>.rand([5, 3, 5, 3])
-        let actual = TF(x.diagonalPart())
-        let expected = TF(x).diagonalPart()
-        XCTAssertEqual(actual, expected)
-      }
-    #endif
+    do {
+      let x = Tensor<Float>.rand([5, 5])
+      let actual = TF(x.diagonalPart())
+      let expected = TF(x).diagonalPart()
+      XCTAssertEqual(actual, expected)
+    }
+    do {
+      let x = Tensor<Float>.rand([5, 3, 5, 3])
+      let actual = TF(x.diagonalPart())
+      let expected = TF(x).diagonalPart()
+      XCTAssertEqual(actual, expected)
+    }
   }
 
   func testElu() throws {
@@ -1349,7 +1346,7 @@ final class TensorTests: XCTestCase {
   }
 
   func testGreater() throws {
-    let originalDims = [3, 2, 4]
+    let originalDims = [3, 2]
     for useReducedPrecision in [false, true] {
       for broadcastDim in 0...originalDims.count {
         var dims = originalDims
@@ -1373,7 +1370,7 @@ final class TensorTests: XCTestCase {
   }
 
   func testGreaterEqual() throws {
-    let originalDims = [3, 2, 4]
+    let originalDims = [3, 2]
     for useReducedPrecision in [false, true] {
       for broadcastDim in 0...originalDims.count {
         var dims = originalDims
@@ -1995,7 +1992,7 @@ final class TensorTests: XCTestCase {
   }
 
   func testLess() throws {
-    let originalDims = [3, 2, 4]
+    let originalDims = [3, 2]
     for useReducedPrecision in [false, true] {
       for broadcastDim in 0...originalDims.count {
         var dims = originalDims
@@ -2019,7 +2016,7 @@ final class TensorTests: XCTestCase {
   }
 
   func testLessEqual() throws {
-    let originalDims = [3, 2, 4]
+    let originalDims = [3, 2]
     for useReducedPrecision in [false, true] {
       for broadcastDim in 0...originalDims.count {
         var dims = originalDims
@@ -2095,7 +2092,7 @@ final class TensorTests: XCTestCase {
       }
       XCTAssert(!actual.isReducedPrecision)
       #if os(macOS) && arch(arm64)
-      let relTolerance: Float = useReducedPrecision ? 7e-2 : 1e-4
+      let relTolerance: Float = useReducedPrecision ? 3e-1 : 1e-4
       #else
       // May fail on platforms besides Ubuntu + x86_64 + CPU-only.
       let relTolerance: Float = useReducedPrecision ? 5e-2 : 1e-4
@@ -2180,7 +2177,7 @@ final class TensorTests: XCTestCase {
         ([1, 2, 3], [1, 2, 3], false, true),
         ([1, 2, 3], [1, 2, 3], true, false),
         ([1, 2, 2], [1, 2, 2], true, true),
-        ([2, 2, 3, 8], [2, 9, 3], true, true),
+        ([2, 2, 3, 4], [2, 4, 3], true, true),
         ([2, 2, 2, 2], [2, 2], true, true),
       ] {
         var x = Tensor<Float>.rand(xShape)
@@ -2330,7 +2327,7 @@ final class TensorTests: XCTestCase {
 
   func testMaxPool3DGrad() throws {
     // TODO(asuhan): Figure out what's going on at higher sizes with bf16.
-    let dims = [1, 6, 6, 6, 1]
+    let dims = [1, 4, 4, 4, 1]
     let elementCount = dims.reduce(1, *)
     let input = Tensor<Float>(
       shape: TensorShape(dims), scalars: Array(stride(from: 0.0, to: Float(elementCount), by: 1)),
@@ -2455,10 +2452,10 @@ final class TensorTests: XCTestCase {
   }
 
   func testMirrorPad() throws {
-    let paddings = [(1, 2), (3, 4), (5, 6)]
+    let paddings = [(1, 2), (3, 4)]
     for useReducedPrecision in [false, true] {
       for reflect in [true, false] {
-        var x = Tensor<Float>.rand([5, 7, 13])
+        var x = Tensor<Float>.rand([5, 7])
         let expected = TF(x).padded(forSizes: paddings, mode: reflect ? .reflect : .symmetric)
         if useReducedPrecision {
           x = x.toReducedPrecision
@@ -2478,10 +2475,10 @@ final class TensorTests: XCTestCase {
   }
 
   func testMirrorPadGrad() throws {
-    let paddings = [(1, 2), (3, 4), (5, 6)]
+    let paddings = [(1, 2), (3, 4)]
     for useReducedPrecision in [false, true] {
       for reflect in [true, false] {
-        var x = Tensor<Float>.rand([5, 7, 13])
+        var x = Tensor<Float>.rand([5, 7])
         let outShape = TF(x).padded(forSizes: paddings, mode: reflect ? .reflect : .symmetric).shape
         var outGrad = Tensor<Float>.rand(outShape.dimensions)
         if useReducedPrecision {
@@ -2688,19 +2685,14 @@ final class TensorTests: XCTestCase {
 
   // TODO(asuhan): Figure out whether we could fix accuracy issues with bf16.
   func testQR() throws {
-    let dims = [4, 7]
-    for m in dims {
-      for n in dims {
-        for fullMatrices in [true, false] {
-          let x = Tensor<Float>.rand([m, n])
-          let actual = x.qrDecomposition(fullMatrices: fullMatrices)
-          let expected = TF(x).qrDecomposition(fullMatrices: fullMatrices)
-          XCTAssert(
-            allClose(actual: TF(actual.q), expected: expected.q, relTolerance: 2e-2))
-          XCTAssert(
-            allClose(actual: TF(actual.r), expected: expected.r, relTolerance: 1e-3))
-        }
-      }
+    for fullMatrices in [true, false] {
+      let x = Tensor<Float>.rand([3, 2])
+      let actual = x.qrDecomposition(fullMatrices: fullMatrices)
+      let expected = TF(x).qrDecomposition(fullMatrices: fullMatrices)
+      XCTAssert(
+        allClose(actual: TF(actual.q), expected: expected.q, relTolerance: 2e-2))
+      XCTAssert(
+        allClose(actual: TF(actual.r), expected: expected.r, relTolerance: 1e-3))
     }
   }
 
@@ -3174,7 +3166,7 @@ final class TensorTests: XCTestCase {
   }
 
   func testSplit() throws {
-    let valueDims = [9, 9, 9]
+    let valueDims = [9, 9]
     let numSplit = Int64(3)
     for useReducedPrecision in [false, true] {
       for splitDim in -valueDims.count..<valueDims.count {
@@ -3215,7 +3207,7 @@ final class TensorTests: XCTestCase {
           dims[inferDim] = -1
         }
         let sizeSplits = Tensor<Int32>(shape: [dims.count], scalars: dims, on: x10)
-        let valueDims = [9, 9, 9]
+        let valueDims = [9, 9]
         for splitDim in -valueDims.count..<valueDims.count {
           var value = Tensor<Float>.rand(valueDims)
           let expectedList =
@@ -3416,27 +3408,22 @@ final class TensorTests: XCTestCase {
   }
 
   func testSvd() throws {
-    let dims = [4, 7]
-    for m in dims {
-      for n in dims {
-        for fullMatrices in [true, false] {
-          let x = Tensor<Float>.rand([m, n])
-          let actual = x.svd(fullMatrices: fullMatrices)
-          let expected = TF(x).svd(fullMatrices: fullMatrices)
-          var diag = _Raw.diag(diagonal: TF(actual.s))
-          let k = actual.s.shape[0]
-          diag = _Raw.pad(diag, paddings: Tensor<Int32>(shape: [2,2],
-              scalars: [0, Int32(actual.u!.shape[1] - k), 0, Int32(actual.v!.shape[1] - k)]))
-          let x2 = matmul(matmul(TF(actual.u!), diag),
-              transposed: false, TF(actual.v!), transposed: true)
-          XCTAssert(
-            allClose(actual: x2, expected: TF(x), relTolerance: 4e-2))
-          XCTAssert(
-            allClose(actual: TF(actual.s), expected: expected.s, relTolerance: 4e-2))
-          XCTAssertEqual(actual.u!.shape, expected.u!.shape)
-          XCTAssertEqual(actual.v!.shape, expected.v!.shape)
-        }
-      }
+    for fullMatrices in [true, false] {
+      let x = Tensor<Float>.rand([3, 2])
+      let actual = x.svd(fullMatrices: fullMatrices)
+      let expected = TF(x).svd(fullMatrices: fullMatrices)
+      var diag = _Raw.diag(diagonal: TF(actual.s))
+      let k = actual.s.shape[0]
+      diag = _Raw.pad(diag, paddings: Tensor<Int32>(shape: [2, 2],
+          scalars: [0, Int32(actual.u!.shape[1] - k), 0, Int32(actual.v!.shape[1] - k)]))
+      let x2 = matmul(matmul(TF(actual.u!), diag),
+          transposed: false, TF(actual.v!), transposed: true)
+      XCTAssert(
+        allClose(actual: x2, expected: TF(x), relTolerance: 4e-2))
+      XCTAssert(
+        allClose(actual: TF(actual.s), expected: expected.s, relTolerance: 4e-2))
+      XCTAssertEqual(actual.u!.shape, expected.u!.shape)
+      XCTAssertEqual(actual.v!.shape, expected.v!.shape)
     }
   }
 
@@ -3517,7 +3504,7 @@ final class TensorTests: XCTestCase {
   func testUnpack() throws {
     for useReducedPrecision in [false, true] {
       for dim in -2..<3 {
-        var xs = [[3, 2, 2], [3, 2, 2], [3, 2, 2]].map { Tensor<Float>.rand($0) }
+        var xs = [[3, 2, 2], [3, 2, 2]].map { Tensor<Float>.rand($0) }
         let expected = xs
         if useReducedPrecision {
           xs = xs.toReducedPrecision
