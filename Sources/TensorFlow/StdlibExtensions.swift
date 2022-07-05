@@ -330,7 +330,7 @@ extension Collection {
 @inlinable
 @inline(__always)
 @_semantics("autodiff.nonvarying")
-public func withoutDerivative<T, R>(at x: T, in body: (T) -> R) -> R {
+public func withoutDerivative<T, R>(at x: T, _ body: (T) -> R) -> R {
   body(x)
 }
 
