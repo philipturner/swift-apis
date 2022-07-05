@@ -4,9 +4,11 @@ import XCTest
 /// Direct tests of xla tensor.
 final class XLATensorTests: XCTestCase {
   func testLazyTensorBarrier() throws {
+    #if FALLBACK_X10_BINARY
     let x = Tensor<Float>(20, on: Device.defaultXLA) * Tensor<Float>(30, on: Device.defaultXLA)
     LazyTensorBarrier()
     XCTAssertEqual(x.scalarized(), 20 * 30)
+    #endif
   }
 
   func testAnnotationsTFEager() throws {

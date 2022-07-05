@@ -125,7 +125,14 @@ let package = Package(
     .testTarget(
       name: "TensorFlowTests",
       dependencies: ["TensorFlow"],
-      exclude: [],
+      swiftSettings: conditionalSwiftSettings),
+    .testTarget(
+      name: "x10Tests",
+      dependencies: [
+        "x10_optimizers_tensor_visitor_plan",
+        "TensorFlow"
+      ],
+      exclude: ["ops_test.swift"],
       swiftSettings: conditionalSwiftSettings),
   ]
 )

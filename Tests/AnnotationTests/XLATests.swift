@@ -15,6 +15,7 @@
 import TensorFlow
 import XCTest
 
+#if FALLBACK_X10_BINARY
 final class AnnotationXLATests: XCTestCase {
   public struct SummaryNet: Layer {
     public var dense1 = Dense<Float>(inputSize: 1, outputSize: 1)
@@ -75,3 +76,4 @@ final class AnnotationXLATests: XCTestCase {
     XCTAssert(validateAnnotations(annotations))
   }
 }
+#endif
