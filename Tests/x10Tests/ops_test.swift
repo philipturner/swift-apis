@@ -876,7 +876,7 @@ final class TensorTests: XCTestCase {
 
   func testConv2D() throws {
     let inChannels = 4
-    let outChannels = 8
+    let outChannels = 4
     let kernelSize = 5
     let inputSize = 14
     let batch = 2
@@ -918,7 +918,7 @@ final class TensorTests: XCTestCase {
 
   func testConv2DGrad() throws {
     let inChannels = 4
-    let outChannels = 8
+    let outChannels = 4
     let kernelSize = 5
     let inputSize = 14
     let batch = 2
@@ -967,7 +967,7 @@ final class TensorTests: XCTestCase {
 
   func testConv3DGrad() throws {
     let inChannels = 4
-    let outChannels = 8
+    let outChannels = 4
     let kernelSize = 5
     let inputSize = 14
     let batch = 2
