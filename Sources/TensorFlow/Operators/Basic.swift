@@ -1301,9 +1301,10 @@ extension Tensor {
     }
   }
 
-  @inlinable
+  @usableFromInline
   // An internal workaround for apple/swift#59135: did not create differentiability witness.
-  // @differentiable(reverse, wrt: self where Scalar: TensorFlowFloatingPoint)
+  // @inlinable
+  @differentiable(reverse, wrt: self where Scalar: TensorFlowFloatingPoint)
   internal subscript(_ indexPath: IndexPath) -> Tensor {
     get {
       let device = self.device
