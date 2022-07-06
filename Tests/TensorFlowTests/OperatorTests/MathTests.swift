@@ -252,11 +252,7 @@ final class MathOperatorTests: XCTestCase {
     let x = Tensor<Float>([2.0, 1.0, 7.0])
     let y = gelu(x)
     let expectedY = Tensor<Float>([1.95459769, 0.84119199, 7.0])
-    if y.device.kind == .GPU {
-      XCTAssert(y.isAlmostEqual(to: expectedY))
-    } else {
-      XCTAssertEqual(y, expectedY)
-    }
+    XCTAssertEqual(y, expectedY)
   }
 
   func testRelu() {
