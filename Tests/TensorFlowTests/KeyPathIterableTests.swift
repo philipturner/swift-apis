@@ -89,8 +89,8 @@ final class KeyPathIterableTests: XCTestCase {
     // Check that recursively all `String` properties have been mutated.
     XCTAssertEqual(MixedKPI(string: "hello world", float: .pi, int: 0), x)
   }
-
-  func testSimpleNested() {
+  
+  func testCrasher() {
     var x = NestedKPI(
       simple: SimpleKPI(w: 1, b: 2),
       mixed: MixedKPI(string: "foo", float: 3, int: 0))
@@ -140,6 +140,57 @@ final class KeyPathIterableTests: XCTestCase {
     XCTAssertEqual(expected, x)
     #endif
   }
+
+//  func testSimpleNested() {
+//    var x = NestedKPI(
+//      simple: SimpleKPI(w: 1, b: 2),
+//      mixed: MixedKPI(string: "foo", float: 3, int: 0))
+//
+//    XCTAssertEqual([\NestedKPI.simple, \NestedKPI.mixed], x.allKeyPaths)
+//    // Causes a runtime segfault on release toolchains.
+//    #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
+//    XCTAssertEqual(
+//      [
+//        \NestedKPI.simple, \NestedKPI.simple.w, \NestedKPI.simple.b,
+//        \NestedKPI.mixed, \NestedKPI.mixed.string,
+//        \NestedKPI.mixed.float, \NestedKPI.mixed.int,
+//      ],
+//      x.recursivelyAllKeyPaths)
+//    #endif
+//
+//    XCTAssertEqual([], x.allKeyPaths(to: Float.self))
+//    XCTAssertEqual([], x.allKeyPaths(to: Int.self))
+//    XCTAssertEqual([], x.allKeyPaths(to: String.self))
+//
+//    XCTAssertEqual([], x.allWritableKeyPaths(to: Float.self))
+//    XCTAssertEqual([], x.allWritableKeyPaths(to: Int.self))
+//    XCTAssertEqual([], x.allWritableKeyPaths(to: String.self))
+//
+//    // Causes a runtime segfault on release toolchains.
+//    #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
+//    XCTAssertEqual(
+//      [\NestedKPI.simple.w, \NestedKPI.simple.b, \NestedKPI.mixed.float],
+//      x.recursivelyAllKeyPaths(to: Float.self))
+//    XCTAssertEqual([\NestedKPI.mixed.int], x.recursivelyAllKeyPaths(to: Int.self))
+//    XCTAssertEqual([\NestedKPI.mixed.string], x.recursivelyAllKeyPaths(to: String.self))
+//
+//    XCTAssertEqual([\NestedKPI.mixed.float], x.recursivelyAllWritableKeyPaths(to: Float.self))
+//    XCTAssertEqual([], x.recursivelyAllWritableKeyPaths(to: Int.self))
+//    XCTAssertEqual([\NestedKPI.mixed.string], x.recursivelyAllWritableKeyPaths(to: String.self))
+//
+//    XCTAssertEqual([], x.recursivelyAllKeyPaths(to: Double.self))
+//
+//    // Mutate recursively all `Float` properties.
+//    for kp in x.recursivelyAllWritableKeyPaths(to: Float.self) {
+//      x[keyPath: kp] *= 100
+//    }
+//    // Check that recursively all `Float` properties have been mutated.
+//    let expected = NestedKPI(
+//      simple: SimpleKPI(w: 1, b: 2),
+//      mixed: MixedKPI(string: "foo", float: 300, int: 0))
+//    XCTAssertEqual(expected, x)
+//    #endif
+//  }
 
   func testComplexNested() {
     var x = ComplexNestedKPI(
