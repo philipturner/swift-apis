@@ -113,23 +113,17 @@ class OptimizerTests: XCTestCase {
 
   func testAdaMax() {
 #if !SR15884_WORKAROUND_2
-    // Causes a runtime segfault on release toolchains.
-    #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
     let model = Model()
     let optimizer = AdaMax(for: model)
     testConvergence(optimizer: optimizer, model: model)
-    #endif
 #endif
   }
 
   func testAMSGrad() {
 #if !SR15884_WORKAROUND_2
-    // Causes a runtime segfault on release toolchains.
-    #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
     let model = Model()
     let optimizer = AMSGrad(for: model)
     testConvergence(optimizer: optimizer, model: model)
-    #endif
 #endif
   }
 

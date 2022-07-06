@@ -35,11 +35,6 @@ final class TensorVisitorPlanTests: XCTestCase {
     let weights = model.differentiableVectorView
 
     let weightsList = plan.allTensors(weights)
-    // Causes a runtime segfault on release toolchains.
-    #if TENSORFLOW_USE_RELEASE_TOOLCHAIN
-    // Suppress compiler warning.
-    _ = weightsList
-    #else
     let allKps = plan.allTensorKeyPaths
     
     var numTensors = 0
@@ -51,7 +46,6 @@ final class TensorVisitorPlanTests: XCTestCase {
     }
     XCTAssertTrue(numTensors == allKps.count)
     XCTAssertTrue(allKps == weights.recursivelyAllWritableKeyPaths(to: Tensor<Float>.self))
-    #endif
   }
 
   func testMask() {
