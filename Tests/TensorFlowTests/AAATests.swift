@@ -17,89 +17,74 @@ import XCTest
 
 struct ASimpleKPI {
   var w = 1
-  
-  var recursivelyAllKeyPaths: [PartialKeyPath<Self>] {
-    var result: [PartialKeyPath<Self>] = []
-    
-    var out = [PartialKeyPath<Self>]()
-    _forEachFieldWithKeyPath(of: Self.self, options: .ignoreUnknown) { name, kp in
-      out.append(kp)
-      return true
-    }
-    
-    for kp in out {
-      result.append(kp)
-    }
-    return result
-  }
-  
-  var _recursivelyAllKeyPathsTypeErased: [AnyKeyPath] {
-    recursivelyAllKeyPaths.map { $0 as AnyKeyPath }
-  }
 }
 
 struct AMixedKPI {
   var string = "foo"
-  
-  var recursivelyAllKeyPaths: [PartialKeyPath<Self>] {
-    var result: [PartialKeyPath<Self>] = []
-    
-    var out = [PartialKeyPath<Self>]()
-    _forEachFieldWithKeyPath(of: Self.self, options: .ignoreUnknown) { name, kp in
-      out.append(kp)
-      return true
-    }
-    
-    for kp in out {
-      result.append(kp)
-    }
-    return result
-  }
-  
-  var _recursivelyAllKeyPathsTypeErased: [AnyKeyPath] {
-    recursivelyAllKeyPaths.map { $0 as AnyKeyPath }
-  }
 }
 
 struct ANestedKPI {
   var simple = ASimpleKPI()
   var mixed = AMixedKPI()
-  
-  var recursivelyAllKeyPaths: [PartialKeyPath<Self>] {
-    var result: [PartialKeyPath<Self>] = []
-    
-    var out = [PartialKeyPath<Self>]()
-    _forEachFieldWithKeyPath(of: Self.self, options: .ignoreUnknown) { name, kp in
-      out.append(kp)
-      return true
-    }
-    
-    for kp in out {
-      result.append(kp)
-      if let nested = self[keyPath: kp] as? ASimpleKPI {
-        for nkp in nested._recursivelyAllKeyPathsTypeErased {
-          result.append(kp.appending(path: nkp)!)
-        }
-      }
-      else if let nested = self[keyPath: kp] as? AMixedKPI {
-        for nkp in nested._recursivelyAllKeyPathsTypeErased {
-          result.append(kp.appending(path: nkp)!)
-        }
-      }
-    }
-    return result
-  }
 }
 
 final class AAATests: XCTestCase {
   func testMyCrasher() {
     var x = ANestedKPI()
     
-    let arr = [\ANestedKPI.mixed.string]
-    let xr1 = x.recursivelyAllKeyPaths
-    let xr2 = x.recursivelyAllKeyPaths
-
-    _ = arr == xr1
-    _ = arr == xr2
+    do {
+      var result: [PartialKeyPath<ANestedKPI>] = []
+      
+      var out = [PartialKeyPath<ANestedKPI>]()
+      _forEachFieldWithKeyPath(of: ANestedKPI.self, options: .ignoreUnknown) { _, kp in
+        out.append(kp)
+        return true
+      }
+      
+      for kp in out {
+        result.append(kp)
+        if x[keyPath: kp] is ASimpleKPI {
+          _forEachFieldWithKeyPath(of: ASimpleKPI.self, options: .ignoreUnknown) { name, nkp in
+            result.append(kp.appending(path: nkp as AnyKeyPath)!)
+            return true
+          }
+        } else if x[keyPath: kp] is AMixedKPI {
+          var out2 = [AnyKeyPath]()
+          _forEachFieldWithKeyPath(of: AMixedKPI.self, options: .ignoreUnknown) { name, nkp in
+            out2.append(nkp as AnyKeyPath)
+            return true
+          }
+          
+          for nkp in out2 {
+            result.append(kp.appending(path: nkp)!)
+          }
+        }
+      }
+    }
+    
+    do {
+      var result: [PartialKeyPath<ANestedKPI>] = []
+      
+      var out = [PartialKeyPath<ANestedKPI>]()
+      _forEachFieldWithKeyPath(of: ANestedKPI.self, options: .ignoreUnknown) { _, kp in
+        out.append(kp)
+        return true
+      }
+      
+      for kp in out {
+        result.append(kp)
+        if x[keyPath: kp] is ASimpleKPI {
+          _forEachFieldWithKeyPath(of: ASimpleKPI.self, options: .ignoreUnknown) { _, nkp in
+            result.append(kp.appending(path: nkp as AnyKeyPath)!)
+            return true
+          }
+        } else if x[keyPath: kp] is AMixedKPI {
+          _forEachFieldWithKeyPath(of: AMixedKPI.self, options: .ignoreUnknown) { _, nkp in
+            result.append(kp.appending(path: nkp as AnyKeyPath)!)
+            return true
+          }
+        }
+      }
+    }
   }
 }
