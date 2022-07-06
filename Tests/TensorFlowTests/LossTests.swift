@@ -89,7 +89,7 @@ final class LossTests: XCTestCase {
 
     let gradients = gradient(
       at: predicted,
-      in: { meanSquaredError(predicted: $0, expected: expected) })
+      of: { meanSquaredError(predicted: $0, expected: expected) })
 
     assertEqual(gradients, expectedGradients, accuracy: 1e-6)
   }
@@ -181,7 +181,7 @@ final class LossTests: XCTestCase {
     let expectedGradients = expectedGradientsBeforeMean / Float(logits.shape[0])
     let gradients = gradient(
       at: logits,
-      in: { softmaxCrossEntropy(logits: $0, probabilities: labels) })
+      of: { softmaxCrossEntropy(logits: $0, probabilities: labels) })
     assertEqual(gradients, expectedGradients, accuracy: 1e-6)
   }
 
@@ -205,7 +205,7 @@ final class LossTests: XCTestCase {
 
     let computedGradient = gradient(
       at: logits,
-      in: { sigmoidCrossEntropy(logits: $0, labels: labels) })
+      of: { sigmoidCrossEntropy(logits: $0, labels: labels) })
     // The expected value of the gradient was computed using Python TensorFlow 1.14 with
     // the following code:
     // ```
@@ -247,31 +247,4 @@ final class LossTests: XCTestCase {
       assertEqual(loss, Tensor(0.62500006), accuracy: 1e-6)
     }
   }
-
-  static var allTests = [
-    ("testL1Loss", testL1Loss),
-    ("testL2Loss", testL2Loss),
-    ("testMeanSquaredErrorLoss", testMeanSquaredErrorLoss),
-    ("testMeanSquaredErrorGrad", testMeanSquaredErrorGrad),
-    ("testMeanSquaredLogarithmicError", testMeanSquaredLogarithmicError),
-    ("testMeanAbsoluteError", testMeanAbsoluteError),
-    ("testMeanAbsolutePercentageError", testMeanAbsolutePercentageError),
-    ("testHingeLoss", testHingeLoss),
-    ("testKullbackLeiblerDivergence", testKullbackLeiblerDivergence),
-    ("testCategoricalHingeLoss", testCategoricalHingeLoss),
-    ("testSquaredHingeLoss", testSquaredHingeLoss),
-    ("testPoissonLoss", testPoissonLoss),
-    ("testLogCoshLoss", testLogCoshLoss),
-    (
-      "testSoftmaxCrossEntropyWithProbabilitiesLoss",
-      testSoftmaxCrossEntropyWithProbabilitiesLoss
-    ),
-    (
-      "testSoftmaxCrossEntropyWithProbabilitiesGrad",
-      testSoftmaxCrossEntropyWithProbabilitiesGrad
-    ),
-    ("testSigmoidCrossEntropyLoss", testSigmoidCrossEntropyLoss),
-    ("testSigmoidCrossEntropyGradient", testSigmoidCrossEntropyGradient),
-    ("testHuberLoss", testHuberLoss),
-  ]
 }

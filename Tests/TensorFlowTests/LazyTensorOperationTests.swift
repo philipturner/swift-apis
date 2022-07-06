@@ -225,33 +225,4 @@ final class LazyTensorOperationTests: XCTestCase {
       XCTAssertEqual(op1.deviceName ?? "", "/job:localhost/replica:0/task:0/device:CPU:0")
     }
   }
-
-  static var allTests = [
-    ("testNoInput", testNoInput),
-    ("testSingleInput", testSingleInput),
-    ("testMultipleInput", testMultipleInputs),
-    ("testListInputs", testListInputs),
-    ("testBoolAttribute", testBoolAttribute),
-    ("testIntAttribute", testIntAttribute),
-    ("testFloatAttribute", testFloatAttribute),
-    ("testDoubleAttribute", testDoubleAttribute),
-    ("testStringAttribute", testStringAttribute),
-    ("testTensorDataTypeAttribute", testTensorDataTypeAttribute),
-    ("testTensorDataTypeArrayAttribute", testTensorDataTypeArrayAttribute),
-    (
-      "testOptionalTensorShapeArrayAttribute",
-      testOptionalTensorShapeArrayAttribute
-    ),
-    ("testOptionalTensorShapeAttribute", testOptionalTensorShapeAttribute),
-    (
-      "testTensorShapeArrayAttribute",
-      testOptionalTensorShapeArrayAttribute
-    ),
-    ("testConstTensorAttribute", testConstTensorAttribute),
-    ("testArrayAttributes", testArrayAttributes),
-    ("testMultipleAttributes", testMultipleAttributes),
-    ("testFunctionAttribute", testFunctionAttribute),
-    ("testDeviceTracking", testDeviceTracking),
-
-  ]
 }

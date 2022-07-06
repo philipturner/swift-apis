@@ -36,9 +36,4 @@ final class TensorUtilitiesTests: XCTestCase {
         250, 123, 18, 180, 125, 119, 182, 148, 222, 72, 138, 206, 141, 154, 101, 150,
         125, 201, 109, 245, 153, 114, 125, 50, 146, 168, 217, 212, 71, 112, 156, 151))
   }
-
-  static var allTests = [
-    ("testSHA1", testSHA1),
-    ("testSHA512", testSHA512),
-  ]
 }

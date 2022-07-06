@@ -43,7 +43,11 @@
 /// ("not a number"). Complex functions in different languages may return
 /// different results when working with special values.
 
+#if canImport(Differentiation)
+import Differentiation
+#else
 import _Differentiation
+#endif
 
 struct Complex<T: FloatingPoint> {
   var real: T

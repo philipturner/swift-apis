@@ -23,9 +23,3 @@ final class RuntimeTests: XCTestCase {
     XCTAssertEqual(cpu0.count, 1, "All devices: \(deviceNames)")
   }
 }
-
-extension RuntimeTests {
-  static var allTests = [
-    ("testDeviceNames", testDeviceNames)
-  ]
-}

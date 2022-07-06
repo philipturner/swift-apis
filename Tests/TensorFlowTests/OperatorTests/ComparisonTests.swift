@@ -40,10 +40,4 @@ final class ComparisonOperatorTests: XCTestCase {
     let nanInf = Tensor<Float>([.nan, .infinity])
     XCTAssertFalse(nanInf.isAlmostEqual(to: nanInf))
   }
-
-  static var allTests = [
-    ("testElementwiseComparison", testElementwiseComparison),
-    ("testLexicographicalComparison", testLexicographicalComparison),
-    ("testIsAlmostEqual", testIsAlmostEqual),
-  ]
 }

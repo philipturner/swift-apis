@@ -106,18 +106,3 @@ final class KeyPathIterableTests: XCTestCase {
       withType: Tensor<Float>.self, { $0.device == otherDevice })
   }
 }
-
-extension KeyPathIterableTests {
-  static var allTests = [
-    ("testConvertToReducedPrecision", testConvertToReducedPrecision),
-    ("testConvertToFullPrecision", testConvertToFullPrecision),
-    ("testToReducedPrecision", testToReducedPrecision),
-    ("testToFullPrecision", testToFullPrecision),
-    ("testMoveToDevice", testMoveToDevice),
-    ("testCopyingToDevice", testCopyingToDevice),
-  ]
-}
-
-XCTMain([
-  testCase(KeyPathIterableTests.allTests)
-])

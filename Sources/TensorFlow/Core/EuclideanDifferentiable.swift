@@ -12,17 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(Differentiation)
+import Differentiation
+#else
 import _Differentiation
+#endif
 
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
 
+#if canImport(ReflectionMirror)
+@_spi(Reflection) import ReflectionMirror
+#else
 @_spi(Reflection) import Swift
+#endif
 
 func listFields<Root>(of type: Root.Type) -> [(String, PartialKeyPath<Root>)] {
+  #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
   guard #available(macOS 9999, *) else {
     fatalError("\(#function) is unavailable")
   }
-
+  #endif
+  
   var out = [(String, PartialKeyPath<Root>)]()
   _forEachFieldWithKeyPath(of: type, options: .ignoreUnknown) { name, kp in
     out.append((String(validatingUTF8: name)!, kp))
@@ -33,10 +43,12 @@ func listFields<Root>(of type: Root.Type) -> [(String, PartialKeyPath<Root>)] {
 
 extension Differentiable {
   static var differentiableFields: [(String, PartialKeyPath<Self>, PartialKeyPath<TangentVector>)] {
+    #if !TENSORFLOW_USE_RELEASE_TOOLCHAIN
     guard #available(macOS 9999, *) else {
       fatalError("\(#function) is unavailable")
     }
-
+    #endif
+    
     let tangentFields = listFields(of: TangentVector.self)
     var i = 0
     var out = [(String, PartialKeyPath<Self>, PartialKeyPath<TangentVector>)]()

@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(Differentiation)
+import Differentiation
+#else
 import _Differentiation
+#endif
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
 import Numerics
 #endif

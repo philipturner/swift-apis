@@ -56,7 +56,7 @@ final class MathOperatorTests: XCTestCase {
     testElementaryFunction(name: "log2", log2, Float.log2)
     testElementaryFunction(name: "log10", log10, Float.log10)
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
-    testElementaryFunction(name: "log1p", log1p, {Float.log(onePlus: $0)})
+    testElementaryFunction(name: "log1p", log1p, { Float.log(onePlus: $0) })
 #else
     testElementaryFunction(name: "log1p", log1p, Float.log1p)
 #endif
@@ -177,7 +177,13 @@ final class MathOperatorTests: XCTestCase {
   func testRsqrt() {
     let x = Tensor<Double>([1, 0.25, 1.0 / 9.0, 0.0625, 0.04])
     let target = Tensor<Double>([1, 2, 3, 4, 5]).sum()
+    #if os(macOS) && arch(arm64)
+    let gradTarget = Tensor<Double>(
+      [-0.49999999999999983, -3.9999999999999987, -13.5, -31.99999999999999, -62.5])
+    #else
+    // May fail on platforms besides Ubuntu + x86_64 + CPU-only.
     let gradTarget = Tensor<Double>([-0.5, -4.0, -13.5, -32.0, -62.5])
+    #endif
     let (value, grad) = valueWithGradient(at: x) { rsqrt($0).sum() }
     XCTAssertEqual(value, target)
     XCTAssertEqual(grad, gradTarget)
@@ -219,7 +225,12 @@ final class MathOperatorTests: XCTestCase {
   func testSoftplus() {
     let x = Tensor<Float>([1.0, 2.0, 3.0])
     let y = softplus(x)
+    #if os(macOS) && arch(arm64)
+    let expectedY = Tensor<Float>([1.3132616, 2.126928, 3.048587])
+    #else
+    // May fail on platforms besides Ubuntu + x86_64 + CPU-only.
     let expectedY = Tensor<Float>([1.3132616, 2.126928, 3.0485873])
+    #endif
     XCTAssertEqual(y, expectedY)
   }
 
@@ -631,61 +642,8 @@ final class MathOperatorTests: XCTestCase {
     }
     let x = Tensor<Float>(ones: [1, 2, 1, 4])
     let y = Tensor<Float>(ones: [4, 1, 3, 1])
-    let (dx, dy) = gradient(at: x, y, in: foo)
+    let (dx, dy) = gradient(at: x, y, of: foo)
     XCTAssertEqual(x.shape, dx.shape)
     XCTAssertEqual(y.shape, dy.shape)
   }
-
-  static var allTests = [
-    ("testElementaryFunctions", testElementaryFunctions),
-    ("testAbs", testAbs),
-    ("testSquaredDifference", testSquaredDifference),
-    ("testZeros", testZeros),
-    ("testLogSoftmax", testLogSoftmax),
-    ("testMax", testMax),
-    ("testMin", testMin),
-    ("testRound", testRound),
-    ("testSoftmax", testSoftmax),
-    ("testSigmoid", testSigmoid),
-    ("testIdentity", testIdentity),
-    ("testClipping", testClipping),
-    ("testRsqrt", testRsqrt),
-    ("testLog1p", testLog1p),
-    ("testLog1mexp", testLog1mexp),
-    ("testExpm1", testExpm1),
-    ("testSign", testSign),
-    ("testLogSigmoid", testLogSigmoid),
-    ("testSoftplus", testSoftplus),
-    ("testSoftsign", testSoftsign),
-    ("testElu", testElu),
-    ("testGelu", testGelu),
-    ("testRelu", testRelu),
-    ("testRelu6", testRelu6),
-    ("testLeakyRelu", testLeakyRelu),
-    ("testSelu", testSelu),
-    ("testSwish", testSwish),
-    ("testHardSigmoid", testHardSigmoid),
-    ("testHardSwish", testHardSwish),
-    ("testMish", testMish),
-    ("testIsFinite", testIsFinite),
-    ("testIsInfinite", testIsInfinite),
-    ("testIsNaN", testIsNaN),
-    ("testCosineSimilarity", testCosineSimilarity),
-    ("testCosineDistance", testCosineDistance),
-    ("testArgmax", testArgmax),
-    ("testReduction", testReduction),
-    ("testCumulativeSum", testCumulativeSum),
-    ("testCumulativeProduct", testCumulativeProduct),
-    ("testStandardDeviation", testStandardDeviation),
-    ("testLogSumExp", testLogSumExp),
-    ("testMoments", testMoments),
-    ("testCeilAndFloor", testCeilAndFloor),
-    ("testSimpleMath", testSimpleMath),
-    ("test3Adds", test3Adds),
-    ("testMultiOpMath", testMultiOpMath),
-    ("testXWPlusB", testXWPlusB),
-    ("testXORInference", testXORInference),
-    ("testMLPClassifierStruct", testMLPClassifierStruct),
-    ("testBroadcastedAddGradient", testBroadcastedAddGradient),
-  ]
 }

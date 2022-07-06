@@ -49,9 +49,4 @@ final class ContextTests: XCTestCase {
       }
     }
   }
-
-  static var allTests = [
-    ("testDropout", testDropout),
-    ("testMultithreadedDropout", testMultithreadedDropout),
-  ]
 }

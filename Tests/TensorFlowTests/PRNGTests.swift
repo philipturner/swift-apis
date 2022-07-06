@@ -33,10 +33,10 @@ final class PRNGTests: XCTestCase {
           0xeb, 0xb4, 0x62, 0x27, 0xc6, 0xcc, 0x8b, 0x37,
           0x64, 0x19, 0x10, 0x83, 0x32, 0x22, 0x77, 0x2a,
         ])
-      for _ in 0..<512 {
+      for _ in 0..<128 {
         _ = rng.next()
       }
-      XCTAssertEqual(rng.next(), 0x370b_1c1f_e655_916d)
+      XCTAssertEqual(rng.next(), 0x3477_c7f7_64a4_1bac)
     }
     do {
       // Copy should not break original.
@@ -47,17 +47,17 @@ final class PRNGTests: XCTestCase {
           0xeb, 0xb4, 0x62, 0x27, 0xc6, 0xcc, 0x8b, 0x37,
           0x64, 0x19, 0x10, 0x83, 0x32, 0x22, 0x77, 0x2a,
         ])
-      for _ in 0..<256 {
+      for _ in 0..<64 {
         _ = rng1.next()
       }
       var rng2 = rng1
-      for _ in 0..<1000 {
+      for _ in 0..<256 {
         _ = rng1.next()
       }
-      for _ in 0..<256 {
+      for _ in 0..<64 {
         _ = rng2.next()
       }
-      XCTAssertEqual(rng2.next(), 0x370b_1c1f_e655_916d)
+      XCTAssertEqual(rng2.next(), 0x3477_c7f7_64a4_1bac)
     }
     // Performance test.
     do {
@@ -75,7 +75,7 @@ final class PRNGTests: XCTestCase {
       // Uniform distribution is in range.
       var rng = ARC4RandomNumberGenerator(seed: UInt64(42))
       let dist = UniformFloatingPointDistribution<Double>(lowerBound: 10, upperBound: 42)
-      for _ in 0..<1000 {
+      for _ in 0..<250 {
         let r = dist.next(using: &rng)
         XCTAssertGreaterThan(r, 10)
         XCTAssertLessThan(r, 42)
@@ -84,18 +84,18 @@ final class PRNGTests: XCTestCase {
     do {
       var rng = ARC4RandomNumberGenerator(seed: UInt64(42))
       let dist = UniformFloatingPointDistribution<Double>(lowerBound: 10, upperBound: 50)
-      let count = 100000
+      let count = 10000
       var mean: Double = 0
       for _ in 0..<count {
         mean += dist.next(using: &rng)
       }
       mean /= Double(count)
-      XCTAssertEqual(mean, 30, accuracy: 0.25)
+      XCTAssertEqual(mean, 30, accuracy: 1)
     }
     do {
       var rng = ARC4RandomNumberGenerator(seed: UInt64(42))
       let dist = UniformFloatingPointDistribution<Double>(lowerBound: 10, upperBound: 50)
-      let count = 100000
+      let count = 10000
       var mean: Double = 0
       var meanSquare: Double = 0
       for _ in 0..<count {
@@ -106,7 +106,7 @@ final class PRNGTests: XCTestCase {
       mean /= Double(count)
       meanSquare /= Double(count)
       let stdDev = (meanSquare - mean * mean).squareRoot()
-      XCTAssertEqual(stdDev, (50 - 10) / 12.squareRoot(), accuracy: 0.25)
+      XCTAssertEqual(stdDev, (50 - 10) / 12.squareRoot(), accuracy: 1)
     }
   }
 
@@ -114,18 +114,18 @@ final class PRNGTests: XCTestCase {
     do {
       var rng = ARC4RandomNumberGenerator(seed: UInt64(42))
       let dist = NormalDistribution<Double>(mean: 10, standardDeviation: 50)
-      let count = 100000
+      let count = 10000
       var mean: Double = 0
       for _ in 0..<count {
         mean += dist.next(using: &rng)
       }
       mean /= Double(count)
-      XCTAssertEqual(mean, 10, accuracy: 0.25)
+      XCTAssertEqual(mean, 10, accuracy: 1)
     }
     do {
       var rng = ARC4RandomNumberGenerator(seed: UInt64(42))
       let dist = NormalDistribution<Double>(mean: 10, standardDeviation: 50)
-      let count = 100000
+      let count = 10000
       var mean: Double = 0
       var meanSquare: Double = 0
       for _ in 0..<count {
@@ -136,7 +136,7 @@ final class PRNGTests: XCTestCase {
       mean /= Double(count)
       meanSquare /= Double(count)
       let stdDev = (meanSquare - mean * mean).squareRoot()
-      XCTAssertEqual(stdDev, 50, accuracy: 0.25)
+      XCTAssertEqual(stdDev, 50, accuracy: 1)
     }
   }
 
@@ -144,18 +144,18 @@ final class PRNGTests: XCTestCase {
     do {
       var rng = ARC4RandomNumberGenerator(seed: UInt64(42))
       let dist = UniformIntegerDistribution<UInt16>()
-      let count = 100000
+      let count = 10000
       var mean: Double = 0
       for _ in 0..<count {
         mean += Double(dist.next(using: &rng))
       }
       mean /= Double(count)
-      XCTAssertEqual(mean, pow(2.0, 15.0), accuracy: 1000)
+      XCTAssertEqual(mean, pow(2.0, 15.0), accuracy: 5000)
     }
     do {
       var rng = ARC4RandomNumberGenerator(seed: UInt64(42))
       let dist = UniformIntegerDistribution<UInt16>()
-      let count = 100000
+      let count = 10000
       var mean: Double = 0
       var meanSquare: Double = 0
       for _ in 0..<count {
@@ -166,7 +166,7 @@ final class PRNGTests: XCTestCase {
       mean /= Double(count)
       meanSquare /= Double(count)
       let stdDev = (meanSquare - mean * mean).squareRoot()
-      XCTAssertEqual(stdDev, pow(2.0, 16.0) / 12.squareRoot(), accuracy: 1000)
+      XCTAssertEqual(stdDev, pow(2.0, 16.0) / 12.squareRoot(), accuracy: 5000)
     }
   }
 
@@ -239,13 +239,4 @@ final class PRNGTests: XCTestCase {
       }
     }
   }
-
-  static var allTests = [
-    ("testARC4", testARC4),
-    ("testUniformDistribution", testUniformDistribution),
-    ("testNormalDistribution", testNormalDistribution),
-    ("testUniformIntegerDistribution", testUniformIntegerDistribution),
-    ("testThreefry", testThreefry),
-    ("testPhilox", testPhilox),
-  ]
 }

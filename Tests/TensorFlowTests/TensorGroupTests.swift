@@ -219,19 +219,4 @@ final class TensorGroupTests: XCTestCase {
 
     NestedGeneric().function()
   }
-
-  static var allTests = [
-    ("testEmptyList", testEmptyList),
-    ("testSimpleTypeList", testSimpleTypeList),
-    ("testSimpleInit", testSimpleInit),
-    ("testMixedTypelist", testMixedTypeList),
-    ("testMixedInit", testMixedInit),
-    ("testNestedTypeList", testNestedTypeList),
-    ("testNestedInit", testNestedInit),
-    ("testGenericTypeList", testGenericTypeList),
-    ("testGenericInit", testGenericInit),
-    ("testNestedGenericTypeList", testNestedGenericTypeList),
-    ("testNestedGenericInit", testNestedGenericInit),
-  ]
-
 }

@@ -281,17 +281,4 @@ class ImageTests: XCTestCase {
         ]
       ])
   }
-
-  static let allTests = [
-    ("testResizeArea", testResizeArea),
-    ("testResizeNearest", testResizeNearest),
-    ("testResizeBilinear", testResizeBilinear),
-    ("testResizeBilinearAntialias", testResizeBilinearAntialias),
-    ("testResizeBicubic", testResizeBicubic),
-    ("testResizeBicubicAntialias", testResizeBicubicAntialias),
-    ("testResizeLanczos3", testResizeLanczos3),
-    ("testResizeLanczos5", testResizeLanczos5),
-    ("testResizeGaussian", testResizeGaussian),
-    ("testResizeMitchellcubic", testResizeMitchellcubic),
-  ]
 }

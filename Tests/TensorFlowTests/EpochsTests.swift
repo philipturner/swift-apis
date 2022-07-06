@@ -66,7 +66,7 @@ final class EpochsTests: XCTestCase {
 
   func testBaseUse() {
     let batchSize = 64
-    let dataset = (0..<512).map { (_) -> Tensor<Float> in
+    let dataset = (0..<128).map { (_) -> Tensor<Float> in
       Tensor<Float>(randomNormal: [224, 224, 3])
     }
     let batches = dataset.inBatches(of: batchSize).lazy.map(\.collated)
@@ -201,7 +201,7 @@ final class EpochsTests: XCTestCase {
   // Let's create an array of things of various lengths (for instance texts)
   let nonuniformDataset: [Tensor<Int32>] = {
     var dataset: [Tensor<Int32>] = []
-    for _ in 0..<512 {
+    for _ in 0..<128 {
       dataset.append(
         Tensor<Int32>(
           repeating: 1,
@@ -393,19 +393,4 @@ final class EpochsTests: XCTestCase {
         "Every epoch sample should be drawn from a different input sample.")
     }
   }
-}
-
-extension EpochsTests {
-  static var allTests = [
-    ("testAllPadding", testAllPadding),
-    ("testInBatchesIsLazy", testInBatchesIsLazy),
-    ("testBaseUse", testBaseUse),
-    ("testTrainingEpochsShuffles", testTrainingEpochsShuffles),
-    ("testTrainingEpochsShapes", testTrainingEpochsShapes),
-    ("testTrainingEpochsIsLazy", testTrainingEpochsIsLazy),
-    ("testLanguageModel", testLanguageModel),
-    ("testLanguageModelShuffled", testLanguageModelShuffled),
-    ("testNonuniformInferenceBatches", testNonuniformInferenceBatches),
-    ("testNonuniformTrainingEpochs", testNonuniformTrainingEpochs),
-  ]
 }

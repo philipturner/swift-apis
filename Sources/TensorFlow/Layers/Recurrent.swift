@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(Differentiation)
+import Differentiation
+#else
 import _Differentiation
+#endif
 
 #if !SR15884_WORKAROUND_1
 /// An input to a recurrent neural network.
@@ -242,9 +246,22 @@ public struct LSTMCell<Scalar: TensorFlowFloatingPoint>: RecurrentLayerCell {
     /// Stack two values.
     @differentiable(reverse)
     public static func stack(_ lhs: Self, _ rhs: Self) -> Self {
-      // TODO(TF-1005): Remove workaround for differenting stacking.
-      let stackCell = Tensor(stacking: [lhs.cell, rhs.cell])
-      let stackHidden = Tensor(stacking: [lhs.hidden, rhs.hidden])
+      // TODO(apple/swift#59876): Remove workaround for differentiating array literal initializer.
+      #if TENSORFLOW_USE_RELEASE_TOOLCHAIN
+      var cellArray: [Tensor<Scalar>] = []
+      cellArray.append(lhs.cell)
+      cellArray.append(rhs.cell)
+      var hiddenArray: [Tensor<Scalar>] = []
+      hiddenArray.append(lhs.hidden)
+      hiddenArray.append(rhs.hidden)
+      #else
+      let cellArray = [lhs.cell, rhs.cell]
+      let hiddenArray = [lhs.hidden, rhs.hidden]
+      #endif
+      
+      // TODO(TF-1005): Remove workaround for differentiating stacking.
+      let stackCell = Tensor(stacking: cellArray)
+      let stackHidden = Tensor(stacking: hiddenArray)
       let cell = stackCell.withDerivative { [shape = stackCell.shape] in
           if $0 == Tensor(0) { $0 = Tensor(zeros: shape) }
       }
@@ -498,7 +515,7 @@ extension Tensor: Mergeable where Scalar: TensorFlowFloatingPoint {
   /// Concatenates two tensors along last axis.
   @differentiable(reverse)
   public static func concatenate(_ lhs: Tensor, _ rhs: Tensor) -> Tensor {
-    // TODO(TF-1005): Remove workaround for differenting concatenated.
+    // TODO(TF-1005): Remove workaround for differentiating concatenated.
     let concat = lhs.concatenated(with: rhs, alongAxis: -1)
     return concat.withDerivative { [shape = concat.shape] in
         if $0 == Tensor(0) { $0 = Tensor(zeros: shape) }
@@ -526,8 +543,17 @@ extension Tensor: Mergeable where Scalar: TensorFlowFloatingPoint {
   /// Stack two values.
   @differentiable(reverse)
   public static func stack(_ lhs: Tensor, _ rhs: Tensor) -> Tensor {
-    // TODO(TF-1005): Remove workaround for differenting stacking.
-    let stack = Tensor(stacking: [lhs, rhs])
+    // TODO(apple/swift#59876): Remove workaround for differentiating array literal initializer.
+    #if TENSORFLOW_USE_RELEASE_TOOLCHAIN
+    var array: [Tensor<Scalar>] = []
+    array.append(lhs)
+    array.append(rhs)
+    #else
+    let array = [lhs, rhs]
+    #endif
+    
+    // TODO(TF-1005): Remove workaround for differentiating stacking.
+    let stack = Tensor(stacking: array)
     return stack.withDerivative { [shape = stack.shape] in
         if $0 == Tensor(0) { $0 = Tensor(zeros: shape) }
     }
@@ -583,7 +609,8 @@ public struct BidirectionalRecurrentLayer<Cell: RecurrentLayerCell>: Layer
 where Cell.TimeStepOutput: Mergeable {
   public typealias Input = [Cell.TimeStepInput]
   public typealias Output = [Cell.TimeStepOutput]
-  public typealias MergeFunction = @differentiable(reverse) (Cell.TimeStepOutput, Cell.TimeStepOutput) -> Cell.TimeStepOutput
+  public typealias MergeFunction =
+    @differentiable(reverse) (Cell.TimeStepOutput, Cell.TimeStepOutput) -> Cell.TimeStepOutput
 
   /// A wrapper around a `@differentiable` merge function.
   ///

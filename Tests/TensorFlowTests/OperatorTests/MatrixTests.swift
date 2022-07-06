@@ -185,12 +185,4 @@ final class MatrixTests: XCTestCase {
         ]
       ])
   }
-
-  static var allTests = [
-    ("testDiagonalPart", testDiagonalPart),
-    ("testDiagonal", testDiagonal),
-    ("testWithDiagonal", testWithDiagonal),
-    ("testBandPart", testBandPart),
-    ("testEye", testEye),
-  ]
 }

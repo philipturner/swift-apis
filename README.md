@@ -55,7 +55,7 @@ let y: Tensor<Int32> = Tensor(randomUniform: [100])
 #### Run a training loop
 
 One way to define a training epoch is to use the
-[`gradient(at:in:)`][gradient] function.
+[`gradient(at:of:)`][gradient] function.
 
 ```swift
 for _ in 0..<1000 {

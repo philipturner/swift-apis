@@ -89,11 +89,4 @@ class NNTests: XCTestCase {
     let emptyGrad = Tensor<Float>(zeros: [0, 1, 2, 8])
     XCTAssertEqual(spaceToDepthPullback(emptyGrad), Tensor(zeros: [0, 2, 4, 2]))
   }
-
-  static let allTests = [
-    ("testDepthToSpace", testDepthToSpace),
-    ("testDepthToSpaceGrad", testDepthToSpaceGrad),
-    ("testSpaceToDepth", testSpaceToDepth),
-    ("testSpaceToDepthGrad", testSpaceToDepthGrad),
-  ]
 }

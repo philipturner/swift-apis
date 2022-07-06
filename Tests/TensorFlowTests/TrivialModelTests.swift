@@ -56,8 +56,4 @@ final class TrivialModelTests: XCTestCase {
     let ŷ = classifier.inferring(from: x)
     XCTAssertEqual(round(ŷ), y)
   }
-
-  static var allTests = [
-    ("testXOR", testXOR)
-  ]
 }

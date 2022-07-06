@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(Differentiation)
+@_exported import Differentiation
+#else
 @_exported import _Differentiation
+#endif
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
 @_exported import Numerics
 #endif
@@ -241,8 +245,10 @@ where Element: Differentiable {
   }
 
   @inlinable
-  public mutating func replaceSubrange<C>(_ subrange: Range<Self.Index>, with newElements: C) where C : Collection, Self.Element == C.Element {
-    fatalError("withUnsafeBufferPointer unimplemented because TensorBuffer is abstract")
+  public mutating func replaceSubrange<C>(
+    _ subrange: Range<Self.Index>, with newElements: C
+  ) where C : Collection, Self.Element == C.Element {
+    self[subrange] = Self.SubSequence(newElements)
   }
 
   @inlinable
@@ -324,7 +330,7 @@ extension Collection {
 @inlinable
 @inline(__always)
 @_semantics("autodiff.nonvarying")
-public func withoutDerivative<T, R>(at x: T, in body: (T) -> R) -> R {
+public func withoutDerivative<T, R>(at x: T, _ body: (T) -> R) -> R {
   body(x)
 }
 

@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(Differentiation)
+import Differentiation
+#else
 import _Differentiation
+#endif
 import TensorFlow
 @_implementationOnly import x10_xla_tensor_wrapper
 
@@ -168,8 +172,7 @@ public func _defaultLossFunction(_ ŷ: Tensor<Float>, _ y: Tensor<Int32>) -> Ten
 public class ThreadState<Model: Layer, Opt: Optimizer>
 where
   Opt.Model == Model, Opt.Scalar == Float, Model.Input == Tensor<Float>,
-  Model.Output == Tensor<Float>,
-  Model.TangentVector.VectorSpaceScalar == Float
+  Model.Output == Tensor<Float>
 {
   public var classifier: Model
   public var optimizer: Opt

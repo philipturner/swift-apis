@@ -56,8 +56,4 @@ final class FreezableTests: XCTestCase {
     XCTAssertEqual(Tensor(10), dense.weight)
     XCTAssertEqual(Tensor(6), dense.bias)
   }
-
-  static var allTests = [
-    ("testFreezableParameters", testFreezableParameters)
-  ]
 }

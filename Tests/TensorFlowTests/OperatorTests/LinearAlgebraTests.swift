@@ -278,18 +278,4 @@ final class LinearAlgebraTests: XCTestCase {
       XCTAssertEqual(extractLeadingDimensions(b, a), [4, 5, 6])
     }
   }
-
-  static var allTests = [
-    ("testCholesky", testCholesky),
-    ("testQRDecompositionApproximation", testQRDecompositionApproximation),
-    ("testSVD", testSVD),
-    ("testTrace", testTrace),
-    ("testTraceGradient", testTraceGradient),
-    ("testDet", testDet),
-    ("testSlogdet", testSlogdet),
-    ("testLogdet", testLogdet),
-    ("testLogdetGradient", testLogdetGradient),
-    ("testTriangularSolve", testTriangularSolve),
-    ("testExtractLeadingDimensions", testExtractLeadingDimensions),
-  ]
 }

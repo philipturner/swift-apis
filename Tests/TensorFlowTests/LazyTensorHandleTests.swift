@@ -130,8 +130,8 @@ final class LazyTensorHandleTests: XCTestCase {
     XCTAssertTrue(isMaterializedConcrete(concreteInputLazyX._lazyTensorHandle))
   }
 
+  #if !FALLBACK_X10_BINARY
   func testTensorToLazyTensorConversions() {
-    #if !FALLBACK_X10_BINARY
     checkConversions(Tensor<Float>(10.0))
     checkConversions(StringTensor("Hello!"))
 
@@ -151,8 +151,8 @@ final class LazyTensorHandleTests: XCTestCase {
     )
     checkConversions(dataset)
     checkConversions(iterator)
-    #endif
   }
+  #endif
 
   private func isSymbolic(_ t: LazyTensorHandle?) -> Bool {
     guard let t = t else { return false }
@@ -169,11 +169,4 @@ final class LazyTensorHandleTests: XCTestCase {
     case .concrete(_, let isMaterialized): return isMaterialized
     }
   }
-
-  static var allTests = [
-    ("testConstructions", testConstructions),
-    ("testLazyTensorOperationProperty", testLazyTensorOperationProperty),
-    ("testLivenessTracking", testLivenessTracking),
-    ("testTensorToLazyTensorConversions", testTensorToLazyTensorConversions),
-  ]
 }

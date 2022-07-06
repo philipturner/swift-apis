@@ -217,18 +217,4 @@ final class SequencedTests: XCTestCase {
 // ###sourceLocation(file: "SequencedTests.swift.gyb", line: 49)
   }
 // ###sourceLocation(file: "SequencedTests.swift.gyb", line: 51)
-
-  static var allTests = [
-// ###sourceLocation(file: "SequencedTests.swift.gyb", line: 54)
-    ("testSequenced2", testSequenced2),
-// ###sourceLocation(file: "SequencedTests.swift.gyb", line: 54)
-    ("testSequenced3", testSequenced3),
-// ###sourceLocation(file: "SequencedTests.swift.gyb", line: 54)
-    ("testSequenced4", testSequenced4),
-// ###sourceLocation(file: "SequencedTests.swift.gyb", line: 54)
-    ("testSequenced5", testSequenced5),
-// ###sourceLocation(file: "SequencedTests.swift.gyb", line: 54)
-    ("testSequenced6", testSequenced6),
-// ###sourceLocation(file: "SequencedTests.swift.gyb", line: 56)
-  ]
 }

@@ -16,8 +16,8 @@
 // REQUIRES: executable_test
 
 #if USE_STDLIBUNITTEST
-  import Swift
-  import StdlibUnittest
+import Swift
+import StdlibUnittest
 #endif
 
 //===--- Rotate -----------------------------------------------------------===//

@@ -40,17 +40,5 @@ final class SequentialTests: XCTestCase {
     % end
   }
   % end
-
-  static var allTests = [
-    % for count in counts:
-    ("testSequential${count}", testSequential${count}),
-    % end
-  ]
-#else
-  func emptyTest() {}
-  
-  static var allTests = [
-    ("emptyTest", emptyTest)
-  ]
 #endif
 }

@@ -126,16 +126,4 @@ final class TensorTests: XCTestCase {
     let annotated = tensor.annotate("annotation")
     XCTAssertEqual(annotated.annotations, "Annotations not available in TF_EAGER.")
   }
-
-  static var allTests = [
-    ("testSimpleCond", testSimpleCond),
-    ("testRankGetter", testRankGetter),
-    ("testShapeGetter", testShapeGetter),
-    ("testTensorShapeDescription", testTensorShapeDescription),
-    ("testEquality", testEquality),
-    ("testTensorShapeCollectionOperations", testTensorShapeCollectionOperations),
-    ("testInitShapeScalars", testInitShapeScalars),
-    ("testInitShapeScalarsDerivative", testInitShapeScalarsDerivative),
-    ("testAnnotationsTFEager", testAnnotationsTFEager),
-  ]
 }

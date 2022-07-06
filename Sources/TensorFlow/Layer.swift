@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(Differentiation)
+import Differentiation
+#else
 import _Differentiation
+#endif
 import Foundation
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
 import Numerics
@@ -159,16 +163,6 @@ public protocol Layer: Module where Input: Differentiable {
   func callAsFunction(_ input: Input) -> Output
 }
 
-
-// extension Layer where Input: DifferentiableTensorProtocol, Output: DifferentiableTensorProtocol {
-//   // Workaround for SR-13455: autodiff undefined symbol linker error.
-//   @differentiable(reverse, wrt: self)
-//   public func callAsFunction(_ input: Input) -> Output {
-//     let activation = callAsFunction(input)
-//     return annotated(activation)
-//   }
-// }
-
 /// An empty struct representing empty `TangentVector`s for parameterless layers.
 public struct EmptyTangentVector: EuclideanDifferentiable, VectorProtocol, ElementaryFunctions,
   PointwiseMultiplicative, KeyPathIterable
@@ -190,11 +184,12 @@ public struct EmptyTangentVector: EuclideanDifferentiable, VectorProtocol, Eleme
 ///
 /// The `TangentVector` of parameterless layers is always `EmptyTangentVector`.
 public protocol ParameterlessLayer: Layer where TangentVector == EmptyTangentVector {
-  @differentiable(reverse) func callAsFunction(_ input: Input) -> Output
+  @differentiable(reverse)
+  func callAsFunction(_ input: Input) -> Output
 }
 
 extension ParameterlessLayer {
-  public mutating func move(by direction: EmptyTangentVector) {}
+  public mutating func move(by offset: EmptyTangentVector) {}
   public var differentiableVectorView: EmptyTangentVector { EmptyTangentVector() }
 }
 
@@ -239,9 +234,15 @@ extension Layer {
     -> (output: Output, backpropagator: Backpropagator)
   {
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
+    #if canImport(Differentiation)
+    let (out, pullback) = Differentiation.valueWithPullback(at: self, input) { layer, input in
+      return layer(input)
+    }
+    #else
     let (out, pullback) = _Differentiation.valueWithPullback(at: self, input) { layer, input in
       return layer(input)
     }
+    #endif
 #else
     let (out, pullback) = Swift.valueWithPullback(at: self, input) { layer, input in
       return layer(input)

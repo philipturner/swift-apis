@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(Differentiation)
+import Differentiation
+#else
 import _Differentiation
+#endif
 import CTensorFlow
 
 infix operator .==: ComparisonPrecedence
@@ -40,13 +44,6 @@ public struct Tensor<Scalar: TensorFlowScalar> {
   @usableFromInline
   internal var _isScalarZero = false
 
-  // /// An internal workaround for SR-13263: debug info generation crash.
-  // @usableFromInline
-  // class SR13263Workaround {}
-
-  // /// An internal workaround for SR-13263: debug info generation crash.
-  // internal var _sr13263Workaround: SR13263Workaround?
-  
   @inlinable
   public init(handle: TensorHandle<Scalar>) {
     self.handle = handle
@@ -704,11 +701,6 @@ extension Tensor: PointwiseMultiplicative where Scalar: Numeric {
 
 extension Tensor: Differentiable & EuclideanDifferentiable where Scalar: TensorFlowFloatingPoint {
   public typealias TangentVector = Tensor
-
-  public var zeroTangentVectorInitializer: () -> TangentVector {
-    let shape = self.shape
-    return { Tensor(zeros: shape) }
-  }
 }
 
 //===------------------------------------------------------------------------------------------===//

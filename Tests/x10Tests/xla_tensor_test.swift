@@ -3,11 +3,13 @@ import XCTest
 
 /// Direct tests of xla tensor.
 final class XLATensorTests: XCTestCase {
+  #if FALLBACK_X10_BINARY
   func testLazyTensorBarrier() throws {
     let x = Tensor<Float>(20, on: Device.defaultXLA) * Tensor<Float>(30, on: Device.defaultXLA)
     LazyTensorBarrier()
     XCTAssertEqual(x.scalarized(), 20 * 30)
   }
+  #endif
 
   func testAnnotationsTFEager() throws {
     let tensor = Tensor<Float>(repeating: 0, shape: [1, 2, 3], on: Device.defaultTFEager)
@@ -24,14 +26,6 @@ final class XLATensorTests: XCTestCase {
   }
 }
 
-extension XLATensorTests {
-  static var allTests = [
-    ("testLazyTensorBarrier", testLazyTensorBarrier),
-    ("testAnnotationsTFEager", testAnnotationsTFEager),
-    ("testAnnotationsXLA", testAnnotationsXLA),
-  ]
-}
-
 final class MultiDeviceAPITests: XCTestCase {
   func testGetAllDevices() {
     XCTAssertFalse(Device.allDevices.isEmpty)
@@ -44,8 +38,16 @@ final class MultiDeviceAPITests: XCTestCase {
     let seed = 47
     let content = _Raw.rand(dims, seed)
     if tpuDevices.isEmpty {
-      let cpuDevice = Device(kind: .CPU, ordinal: 0, backend: .XLA)
-      XCTAssertEqual(content.device, cpuDevice)
+      switch content.device.kind {
+      case .CPU:
+        let cpuDevice = Device(kind: .CPU, ordinal: 0, backend: .XLA)
+        XCTAssertEqual(content.device, cpuDevice)
+      case .GPU:
+        let gpuDevice = Device(kind: .GPU, ordinal: 0, backend: .XLA)
+        XCTAssertEqual(content.device, gpuDevice)
+      default:
+        XCTFail("Device type \(content.device.kind) not accounted for.")
+      }
     }
     let tpuTensors = tpuDevices.map { _Raw.toDevice(content, $0) }
     for (tpuTensor, tpuDevice) in zip(tpuTensors, tpuDevices) {
@@ -99,19 +101,3 @@ final class MultiDeviceAPITests: XCTestCase {
     XCTAssertEqual(res.scalarized(), 63)
   }
 }
-
-extension MultiDeviceAPITests {
-  static var allTests = [
-    ("testGetAllDevices", testGetAllDevices),
-    ("testTensorDevice", testTensorDevice),
-    ("testSetGetReplication", testSetGetReplication),
-    ("testSyncLiveTensors", testSyncLiveTensors),
-    ("testCrossReplicaSum", testCrossReplicaSum),
-    ("testFunctionalWhile", testFunctionalWhile),
-  ]
-}
-
-XCTMain([
-  testCase(XLATensorTests.allTests),
-  testCase(MultiDeviceAPITests.allTests),
-])

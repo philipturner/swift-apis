@@ -16,6 +16,25 @@
 // limitations under the License.
 
 import PackageDescription
+import class Foundation.ProcessInfo
+
+var conditionalPackageDependencies: [Package.Dependency] = []
+var conditionalSwiftSettings: [SwiftSetting] = []
+var conditionalTargetDependencies: [Target.Dependency] = []
+
+if ProcessInfo.processInfo.environment["TENSORFLOW_USE_RELEASE_TOOLCHAIN"] != nil {
+  conditionalPackageDependencies += [
+    .package(url: "https://github.com/philipturner/differentiation", .branch("main")),
+    .package(url: "https://github.com/philipturner/swift-reflection-mirror", .branch("main")),
+  ]
+  conditionalSwiftSettings += [
+    .define("TENSORFLOW_USE_RELEASE_TOOLCHAIN"),
+  ]
+  conditionalTargetDependencies += [
+    .product(name: "_Differentiation", package: "differentiation"),
+    .product(name: "ReflectionMirror", package: "swift-reflection-mirror"),
+  ]
+}
 
 let package = Package(
   name: "TensorFlow",
@@ -35,15 +54,15 @@ let package = Package(
       name: "x10_optimizers_tensor_visitor_plan",
       type: .dynamic,
       targets: ["x10_optimizers_tensor_visitor_plan"]),
-    // .library(
-    //   name: "x10_training_loop",
-    //   type: .dynamic,
-    //   targets: ["x10_training_loop"]),
+//    .library(
+//      name: "x10_training_loop",
+//      type: .dynamic,
+//      targets: ["x10_training_loop"]),
   ],
   dependencies: [
     .package(url: "https://github.com/apple/swift-numerics", .branch("main")),
     .package(url: "https://github.com/pvieito/PythonKit.git", .branch("master")),
-  ],
+  ] + conditionalPackageDependencies,
   targets: [
     .target(
       name: "CTensorFlow",
@@ -58,17 +77,18 @@ let package = Package(
         "CTensorFlow",
         "CX10Modules",
         .product(name: "Numerics", package: "swift-numerics"),
-      ],
+      ] + conditionalTargetDependencies,
       swiftSettings: [
         .define("DEFAULT_BACKEND_EAGER"),
-      ]),
+      ] + conditionalSwiftSettings),
     .target(
       name: "x10_optimizers_tensor_visitor_plan",
       dependencies: ["TensorFlow"],
       path: "Sources/x10",
       sources: [
         "swift_bindings/optimizers/TensorVisitorPlan.swift",
-      ]),
+      ],
+      swiftSettings: conditionalSwiftSettings),
     .target(
       name: "x10_optimizers_optimizer",
       dependencies: [
@@ -79,23 +99,39 @@ let package = Package(
       sources: [
         "swift_bindings/optimizers/Optimizer.swift",
         "swift_bindings/optimizers/Optimizers.swift",
-      ]),
-    // .target(
-    //   name: "x10_training_loop",
-    //   dependencies: ["TensorFlow"],
-    //   path: "Sources/x10",
-    //   sources: [
-    //     "swift_bindings/training_loop.swift",
-    //   ]),
+      ],
+      swiftSettings: conditionalSwiftSettings),
+//     .target(
+//       name: "x10_training_loop",
+//       dependencies: ["TensorFlow"],
+//       path: "Sources/x10",
+//       sources: [
+//         "swift_bindings/training_loop.swift",
+//       ],
+//       swiftSettings: conditionalSwiftSettings),
     .target(
       name: "Experimental",
-      dependencies: [],
-      path: "Sources/third_party/Experimental"),
+      dependencies: conditionalTargetDependencies,
+      path: "Sources/third_party/Experimental",
+      swiftSettings: conditionalSwiftSettings),
+    .testTarget(
+      name: "AnnotationTests",
+      dependencies: ["TensorFlow"],
+      swiftSettings: conditionalSwiftSettings),
     .testTarget(
       name: "ExperimentalTests",
-      dependencies: ["Experimental"]),
+      dependencies: ["Experimental"],
+      swiftSettings: conditionalSwiftSettings),
     .testTarget(
       name: "TensorFlowTests",
-      dependencies: ["TensorFlow"]),
+      dependencies: ["TensorFlow"],
+      swiftSettings: conditionalSwiftSettings),
+    .testTarget(
+      name: "x10Tests",
+      dependencies: [
+        "x10_optimizers_tensor_visitor_plan",
+        "TensorFlow"
+      ],
+      swiftSettings: conditionalSwiftSettings),
   ]
 )

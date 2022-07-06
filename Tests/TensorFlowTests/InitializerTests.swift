@@ -235,25 +235,4 @@ final class InitializerTests: XCTestCase {
       }
     }
   }
-
-  static var allTests = [
-    ("testInitializers", testInitializers),
-    ("testFactoryInitializers", testFactoryInitializers),
-    ("testNumericInitializers", testNumericInitializers),
-    ("testScalarToTensorConversion", testScalarToTensorConversion),
-    ("testArrayConversion", testArrayConversion),
-    ("testDataTypeCast", testDataTypeCast),
-    ("testBoolToNumericCast", testBoolToNumericCast),
-    ("testRandomUniform", testRandomUniform),
-    ("testRandomNormal", testRandomNormal),
-    ("testRandomTruncatedNormal", testRandomTruncatedNormal),
-    ("testGlorotUniform", testGlorotUniform),
-    ("testGlorotNormal", testGlorotNormal),
-    ("testHeUniform", testHeUniform),
-    ("testHeNormal", testHeNormal),
-    ("testLeCunUniform", testLeCunUniform),
-    ("testLeCunNormal", testLeCunNormal),
-    ("testCategoricalFromLogits", testCategoricalFromLogits),
-    ("testOrthogonalShapesValues", testOrthogonalShapesValues),
-  ]
 }

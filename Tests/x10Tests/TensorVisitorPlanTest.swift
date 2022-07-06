@@ -36,7 +36,7 @@ final class TensorVisitorPlanTests: XCTestCase {
 
     let weightsList = plan.allTensors(weights)
     let allKps = plan.allTensorKeyPaths
-
+    
     var numTensors = 0
     plan.mapTensors(&steps, weights) { (step: inout Tensor<Float>, weight: Tensor<Float>, i: Int) in
       XCTAssertTrue(step == weight)
@@ -87,15 +87,3 @@ final class TensorVisitorPlanTests: XCTestCase {
         upper: \Classifier.TangentVector.layers[4]))
   }
 }
-
-extension TensorVisitorPlanTests {
-  static var allTests = [
-    ("testBasic", testBasic),
-    ("testMask", testMask),
-    ("testAllKeysBetween", testAllKeysBetween),
-  ]
-}
-
-XCTMain([
-  testCase(TensorVisitorPlanTests.allTests)
-])

@@ -48,10 +48,4 @@ final class SequencedTests: XCTestCase {
     % end
   }
   % end
-
-  static var allTests = [
-    % for count in counts:
-    ("testSequenced${count}", testSequenced${count}),
-    % end
-  ]
 }
