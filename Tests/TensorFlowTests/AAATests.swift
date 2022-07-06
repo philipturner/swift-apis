@@ -44,13 +44,13 @@ final class AAATests: XCTestCase {
       for kp in out {
         result.append(kp)
         if x[keyPath: kp] is ASimpleKPI {
-          _forEachFieldWithKeyPath(of: ASimpleKPI.self, options: .ignoreUnknown) { name, nkp in
+          _forEachFieldWithKeyPath(of: ASimpleKPI.self, options: .ignoreUnknown) { _, nkp in
             result.append(kp.appending(path: nkp as AnyKeyPath)!)
             return true
           }
         } else if x[keyPath: kp] is AMixedKPI {
           var out2 = [AnyKeyPath]()
-          _forEachFieldWithKeyPath(of: AMixedKPI.self, options: .ignoreUnknown) { name, nkp in
+          _forEachFieldWithKeyPath(of: AMixedKPI.self, options: .ignoreUnknown) { _, nkp in
             out2.append(nkp as AnyKeyPath)
             return true
           }
