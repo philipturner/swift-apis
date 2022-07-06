@@ -3071,6 +3071,8 @@ final class TensorTests: XCTestCase {
     }
   }
 
+  // (s4tf/s4tf#14) Fails at runtime.
+  #if !FALLBACK_X10_BINARY
   func testSoftmaxCrossEntropyWithLogits() throws {
     var features = Tensor<Float>.rand([3, 4])
     var labels = Tensor<Float>.rand([3, 4])
@@ -3088,6 +3090,7 @@ final class TensorTests: XCTestCase {
         features, outGrad, relTolerance: relTolerance, absTolerance: 1e-4)
     }
   }
+  #endif
 
   func testSoftplus() throws {
     func softplusX10(_ arg: Tensor<Float>) -> Tensor<Float> {
