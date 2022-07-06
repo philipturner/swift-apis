@@ -38,8 +38,16 @@ final class MultiDeviceAPITests: XCTestCase {
     let seed = 47
     let content = _Raw.rand(dims, seed)
     if tpuDevices.isEmpty {
-      let cpuDevice = Device(kind: .CPU, ordinal: 0, backend: .XLA)
-      XCTAssertEqual(content.device, cpuDevice)
+      switch content.device.kind {
+      case .CPU:
+        let cpuDevice = Device(kind: .CPU, ordinal: 0, backend: .XLA)
+        XCTAssertEqual(content.device, cpuDevice)
+      case .GPU:
+        let gpuDevice = Device(kind: .GPU, ordinal: 0, backend: .XLA)
+        XCTAssertEqual(content.device, gpuDevice)
+      default:
+        XCTFail("Device type \(content.device.kind) not accounted for.")
+      }
     }
     let tpuTensors = tpuDevices.map { _Raw.toDevice(content, $0) }
     for (tpuTensor, tpuDevice) in zip(tpuTensors, tpuDevices) {

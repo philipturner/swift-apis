@@ -370,7 +370,11 @@ final class LayerTests: XCTestCase {
     let expectedNoBias = Tensor<Float>(
       shape: [1, 1, 4, 1],
       scalars: [0, 1, 4, 10])
-    XCTAssertEqual(outputNoBias, expectedNoBias)
+    if outputNoBias.device.kind == .GPU {
+      XCTAssert(outputNoBias.isAlmostEqual(to: expectedNoBias))
+    } else {
+      XCTAssertEqual(outputNoBias, expectedNoBias)
+    }
   }
 
   func testTransposedConv2D() {
