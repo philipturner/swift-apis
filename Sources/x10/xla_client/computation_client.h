@@ -220,6 +220,11 @@ class ComputationClient {
     std::vector<Output> outputs;
     std::vector<Input> inputs;
   };
+  
+  struct MemoryInfo {
+    int64_t kb_free = 0;
+    int64_t kb_total = 0;
+  };
 
   static std::unique_ptr<ComputationClient> Create();
 
@@ -253,6 +258,10 @@ class ComputationClient {
 
   virtual std::map<std::string, Metric> GetMetrics() const = 0;
   static std::map<std::string, Metric> ReadMetrics();
+
+  virtual MemoryInfo GetMemoryInfo(const std::string& device) = 0;
+
+  virtual void PrepareToExit() = 0;
 
   // Utility API around the vector based Compile() API to compile a single
   // computation.
@@ -298,6 +307,8 @@ class ComputationClient {
 
   // Returns the ComputationClient singleton.
   static ComputationClient* Get();
+
+  static ComputationClient* GetIfInitialized();
 
  private:
   std::vector<Device*> devices_;

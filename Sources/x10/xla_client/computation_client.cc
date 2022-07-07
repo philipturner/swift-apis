@@ -28,9 +28,24 @@
 #include "tensorflow/compiler/xla/xla_client/mesh_service.h"
 #include "tensorflow/compiler/xla/xla_client/sys_util.h"
 #include "tensorflow/compiler/xla/status_macros.h"
+#include "tensorflow/core/platform/stacktrace_handler.h"
 #include "tensorflow/core/util/device_name_utils.h"
 
 namespace xla {
+namespace {
+
+std::atomic<ComputationClient*> g_computation_client(nullptr);
+std::once_flag g_computation_client_once;
+
+ComputationClient* CreateClient() {
+  if (sys_util::GetEnvBool("XLA_DUMP_FATAL_STACK", false)) {
+    tensorflow::testing::InstallStacktraceHandler();
+  }
+  auto client = ComputationClient::Create();
+  return client.release();
+}
+
+}
 
 std::shared_ptr<ComputationClient::Computation> ComputationClient::Compile(
     XlaComputation computation, std::string compilation_device,
@@ -61,9 +76,13 @@ int64_t ComputationClient::GetDeviceOrdinal(const std::string& device) {
 }
 
 ComputationClient* ComputationClient::Get() {
-  static ComputationClient* computation_client =
-      ComputationClient::Create().release();
-  return computation_client;
+  std::call_once(g_computation_client_once,
+                 [&]() { g_computation_client = CreateClient(); });
+  return g_computation_client.load();
+}
+
+ComputationClient* ComputationClient::GetIfInitialized() {
+  return g_computation_client.load();
 }
 
 metrics::Metric* ComputationClient::TransferToServerMetric() {

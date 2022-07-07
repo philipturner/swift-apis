@@ -195,6 +195,10 @@ class XrtComputationClient : public ComputationClient,
 
   std::map<std::string, Metric> GetMetrics() const override;
 
+  MemoryInfo GetMemoryInfo(const std::string& device) override;
+
+  void PrepareToExit() override;
+
   static Worker ParseWorker(const std::string& worker);
 
   static std::string GetMultiProcessingDevice();
@@ -246,8 +250,6 @@ class XrtComputationClient : public ComputationClient,
   XrtSession* GetSessionForDevice(XrtSessionCache* cache,
                                   const std::string& device,
                                   XrtSessionCache::SessionMap* session_map);
-
-  std::string GetEffectiveDevice(const std::string& device) const;
 
   const std::string& SwiftDeviceToXrtDevice(const std::string& device) const;
 
@@ -444,6 +446,13 @@ class XrtComputationClient : public ComputationClient,
   //  holders[0] = Tuple handle place-holder (DT_INT64)
   //  holders[1] = Tuple index place-holder (DT_INT32[])
   const XrtSession::CachedNode& GetSubTupleNode(
+      XrtSession* session, const tensorflow::Scope& scope,
+      const std::string& device) const;
+
+  // Creates an XRTMemoryInfo node:
+  //
+  //  XRTMemoryInfo()
+  const XrtSession::CachedNode& GetMemoryInfoNode(
       XrtSession* session, const tensorflow::Scope& scope,
       const std::string& device) const;
 

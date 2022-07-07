@@ -72,7 +72,8 @@ class Cleanup {
 
   explicit Cleanup(std::function<void(StatusType)> func)
       : func_(std::move(func)) {}
-  Cleanup(Cleanup&& ref) : func_(std::move(ref.func_)) {}
+  Cleanup(Cleanup&& ref)
+      : func_(std::move(ref.func_)), status_(std::move(ref.status_)) {}
   Cleanup(const Cleanup&) = delete;
 
   ~Cleanup() {
@@ -86,6 +87,7 @@ class Cleanup {
   Cleanup& operator=(Cleanup&& ref) {
     if (this != &ref) {
       func_ = std::move(ref.func_);
+      status_ = std::move(ref.status_);
     }
     return *this;
   }

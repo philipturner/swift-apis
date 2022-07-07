@@ -35,6 +35,8 @@ class MeshService {
   MeshService(const std::string& address, grpc::Config config);
 
   ~MeshService();
+  
+  void Shutdown();
 
  private:
   std::unique_ptr<Impl> impl_;
