@@ -65,6 +65,7 @@ extension Module where Input: TensorProtocol, Output: DifferentiableTensorProtoc
   @differentiable(reverse, wrt: self)
   public func callAsFunction(_ input: Input) -> Output {
     let activation = forward(input)
+    print("call with annotate")
     return annotated(activation)
   }
 
@@ -157,7 +158,28 @@ public protocol Layer: Module where Input: Differentiable {
   /// - Returns: The output.
   @differentiable(reverse)
   func callAsFunction(_ input: Input) -> Output
+  
+  @differentiable(reverse)
+  func forward(_ input: Input) -> Output
 }
+
+extension Layer {
+  // Workaround for SR-13455: autodiff undefined symbol linker error.
+  @differentiable(reverse, wrt: self)
+  @differentiable(reverse)
+  public func forward(_ input: Input) -> Output {
+    return callAsFunction(input)
+  }
+}
+
+// Workaround for apple/swift#59952.
+//extension Layer where Input: DifferentiableTensorProtocol, Output: DifferentiableTensorProtocol {
+//  @differentiable(reverse)
+//  public func callAsFunction(_ input: Input) -> Output {
+//    let activation = forward(input)
+//    return annotated(activation)
+//  }
+//}
 
 /// An empty struct representing empty `TangentVector`s for parameterless layers.
 public struct EmptyTangentVector: EuclideanDifferentiable, VectorProtocol, ElementaryFunctions,

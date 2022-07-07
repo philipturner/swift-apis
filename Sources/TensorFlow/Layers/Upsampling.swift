@@ -37,12 +37,19 @@ public struct UpSampling1D<Scalar: TensorFlowFloatingPoint>: ParameterlessLayer 
   /// - Parameter input: The input to the layer.
   /// - Returns: The output.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let shape = input.shape
     let (batchSize, timesteps, channels) = (shape[0], shape[1], shape[2])
     let scaleOnes = Tensor<Scalar>(ones: [1, 1, size, 1], on: input.device)
     let upSampling = input.reshaped(to: [batchSize, timesteps, 1, channels]) * scaleOnes
     return upSampling.reshaped(to: [batchSize, timesteps * size, channels])
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -65,13 +72,20 @@ public struct UpSampling2D<Scalar: TensorFlowFloatingPoint>: ParameterlessLayer 
   /// - Parameter input: The input to the layer.
   /// - Returns: The output.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let device = input.device
     let shape = input.shape
     let (batchSize, height, width, channels) = (shape[0], shape[1], shape[2], shape[3])
     let scaleOnes = Tensor<Scalar>(ones: [1, 1, size, 1, size, 1], on: device)
     let upSampling = input.reshaped(to: [batchSize, height, 1, width, 1, channels]) * scaleOnes
     return upSampling.reshaped(to: [batchSize, height * size, width * size, channels])
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -128,10 +142,17 @@ public struct UpSampling3D<Scalar: TensorFlowFloatingPoint>: ParameterlessLayer 
   /// - Parameter input: The input to the layer.
   /// - Returns: The output.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     var result = repeatingElements(input, alongAxis: 1, count: size)
     result = repeatingElements(result, alongAxis: 2, count: size)
     result = repeatingElements(result, alongAxis: 3, count: size)
     return result
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }

@@ -16,7 +16,7 @@
 ///
 /// This layer returns the morphogical dilation of the input tensor with the provided filters
 @frozen
-public struct `Dilation2D`<Scalar: TensorFlowFloatingPoint>: Layer {
+public struct Dilation2D<Scalar: TensorFlowFloatingPoint>: Layer {
   /// The 4-D dilation filter.
   public var filter: Tensor<Scalar>
   /// The strides of the sliding window for spatial dimensions.
@@ -70,7 +70,7 @@ public struct `Dilation2D`<Scalar: TensorFlowFloatingPoint>: Layer {
   ///
   /// - Note: Padding size equals zero when using `.valid`.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let dilated = dilation2D(
       input,
       filter: filter,
@@ -80,13 +80,20 @@ public struct `Dilation2D`<Scalar: TensorFlowFloatingPoint>: Layer {
 
     return dilated
   }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
+  }
 }
 
 /// A 2-D morphological erosion layer
 ///
 /// This layer returns the morphogical erosion of the input tensor with the provided filters
 @frozen
-public struct `Erosion2D`<Scalar: TensorFlowFloatingPoint>: Layer {
+public struct Erosion2D<Scalar: TensorFlowFloatingPoint>: Layer {
   /// The 4-D dilation filter.
   public var filter: Tensor<Scalar>
   /// The strides of the sliding window for spatial dimensions.
@@ -140,7 +147,7 @@ public struct `Erosion2D`<Scalar: TensorFlowFloatingPoint>: Layer {
   ///
   /// - Note: Padding size equals zero when using `.valid`.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let eroded = erosion2D(
       input,
       filter: filter,
@@ -149,5 +156,12 @@ public struct `Erosion2D`<Scalar: TensorFlowFloatingPoint>: Layer {
       padding: padding)
 
     return eroded
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
