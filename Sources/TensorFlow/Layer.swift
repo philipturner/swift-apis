@@ -22,11 +22,9 @@ import Foundation
 import Numerics
 #endif
 
-public protocol Module:
-  EuclideanDifferentiable, KeyPathIterable_SR15884_Workaround
+public protocol Module: EuclideanDifferentiable, KeyPathIterable
 where
-  TangentVector: VectorProtocol & ElementaryFunctions & PointwiseMultiplicative
-    & KeyPathIterable_SR15884_Workaround
+  TangentVector: VectorProtocol & ElementaryFunctions & PointwiseMultiplicative & KeyPathIterable
 {
   /// The input type of the layer.
   associatedtype Input

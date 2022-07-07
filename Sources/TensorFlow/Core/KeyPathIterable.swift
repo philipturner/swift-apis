@@ -187,10 +187,4 @@ extension Optional.TangentVector: KeyPathIterable {
   }
 }
 
-#if SR15884_WORKAROUND_2
-public typealias KeyPathIterable_SR15884_Workaround = Any
-#else
-public typealias KeyPathIterable_SR15884_Workaround = KeyPathIterable
-#endif
-
 #endif
