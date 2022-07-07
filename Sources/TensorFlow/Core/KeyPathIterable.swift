@@ -24,8 +24,6 @@ import Differentiation
 import _Differentiation
 #endif
 
-#if TENSORFLOW_USE_STANDARD_TOOLCHAIN
-
 #if canImport(ReflectionMirror)
 @_spi(Reflection) import ReflectionMirror
 #else
@@ -186,11 +184,3 @@ extension Optional.TangentVector: KeyPathIterable {
     return []
   }
 }
-
-#if SR15884_WORKAROUND_2
-public typealias KeyPathIterable_SR15884_Workaround = Any
-#else
-public typealias KeyPathIterable_SR15884_Workaround = KeyPathIterable
-#endif
-
-#endif

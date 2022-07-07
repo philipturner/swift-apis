@@ -18,15 +18,11 @@ import Differentiation
 import _Differentiation
 #endif
 import Foundation
-#if TENSORFLOW_USE_STANDARD_TOOLCHAIN
 import Numerics
-#endif
 
-public protocol Module:
-  EuclideanDifferentiable, KeyPathIterable_SR15884_Workaround
+public protocol Module: EuclideanDifferentiable, KeyPathIterable
 where
-  TangentVector: VectorProtocol & ElementaryFunctions & PointwiseMultiplicative
-    & KeyPathIterable_SR15884_Workaround
+  TangentVector: VectorProtocol & ElementaryFunctions & PointwiseMultiplicative & KeyPathIterable
 {
   /// The input type of the layer.
   associatedtype Input
@@ -233,7 +229,6 @@ extension Layer {
   public func appliedForBackpropagation(to input: Input)
     -> (output: Output, backpropagator: Backpropagator)
   {
-#if TENSORFLOW_USE_STANDARD_TOOLCHAIN
     #if canImport(Differentiation)
     let (out, pullback) = Differentiation.valueWithPullback(at: self, input) { layer, input in
       return layer(input)
@@ -243,11 +238,6 @@ extension Layer {
       return layer(input)
     }
     #endif
-#else
-    let (out, pullback) = Swift.valueWithPullback(at: self, input) { layer, input in
-      return layer(input)
-    }
-#endif
     return (out, pullback)
   }
 }

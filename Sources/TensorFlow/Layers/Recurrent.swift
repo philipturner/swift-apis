@@ -18,7 +18,6 @@ import Differentiation
 import _Differentiation
 #endif
 
-#if !SR15884_WORKAROUND_1
 /// An input to a recurrent neural network.
 public struct RNNCellInput<Input: Differentiable, State: Differentiable>: Differentiable {
   /// The input at the current time step.
@@ -762,4 +761,3 @@ fileprivate extension Array where Element: Differentiable {
     )
   }
 }
-#endif

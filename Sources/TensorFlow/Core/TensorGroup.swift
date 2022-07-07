@@ -339,8 +339,6 @@ extension Array: TensorArrayProtocol where Element: TensorGroup {
   }
 }
 
-#if TENSORFLOW_USE_STANDARD_TOOLCHAIN
-
 #if canImport(ReflectionMirror)
 @_spi(Reflection) import ReflectionMirror
 #else
@@ -425,5 +423,3 @@ extension TensorGroup {
     }
   }
 }
-
-#endif

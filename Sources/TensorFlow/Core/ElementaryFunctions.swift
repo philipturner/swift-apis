@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if TENSORFLOW_USE_STANDARD_TOOLCHAIN
-
 import Numerics
 #if canImport(ReflectionMirror)
 @_spi(Reflection) import ReflectionMirror
@@ -176,5 +174,3 @@ extension ElementaryFunctions {
   public static func root(_ x: Self, _ n: Int) -> Self { .init(mapped: Functor_root(n: n), x) }
   public static func pow(_ x: Self, _ y: Self) -> Self { .init(mapped: Functor_pow2(), x, y) }
 }
-
-#endif

@@ -18,8 +18,6 @@ import Differentiation
 import _Differentiation
 #endif
 
-#if TENSORFLOW_USE_STANDARD_TOOLCHAIN
-
 #if canImport(ReflectionMirror)
 @_spi(Reflection) import ReflectionMirror
 #else
@@ -149,5 +147,3 @@ extension PointwiseMultiplicative {
 extension Array.DifferentiableView: _PointwiseMultiplicative
 where Element: Differentiable & PointwiseMultiplicative {}
 extension Tensor: _PointwiseMultiplicative where Scalar: Numeric {}
-
-#endif
