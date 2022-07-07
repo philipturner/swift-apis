@@ -17,9 +17,7 @@ import Differentiation
 #else
 import _Differentiation
 #endif
-#if TENSORFLOW_USE_STANDARD_TOOLCHAIN
 import Numerics
-#endif
 
 infix operator .>: ComparisonPrecedence
 infix operator .==: ComparisonPrecedence
@@ -270,12 +268,10 @@ extension Tensor: ElementaryFunctions where Scalar: TensorFlowFloatingPoint {
     _Raw.expm1(x)
   }
 
-#if TENSORFLOW_USE_STANDARD_TOOLCHAIN
   @differentiable(reverse)
   public static func expMinusOne(_ x: Self) -> Self {
     return expm1(x)
   }
-#endif
 
   @inlinable
   @derivative(of: expm1)
@@ -318,12 +314,10 @@ extension Tensor: ElementaryFunctions where Scalar: TensorFlowFloatingPoint {
     _Raw.log1p(x)
   }
 
-#if TENSORFLOW_USE_STANDARD_TOOLCHAIN
   @differentiable(reverse)
   public static func log(onePlus x: Self) -> Self {
     return log1p(x)
   }
-#endif
 
   @inlinable
   @derivative(of: log1p)

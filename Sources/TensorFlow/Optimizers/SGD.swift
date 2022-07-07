@@ -17,9 +17,7 @@ import Differentiation
 #else
 import _Differentiation
 #endif
-#if TENSORFLOW_USE_STANDARD_TOOLCHAIN
 import Numerics
-#endif
 
 /// A stochastic gradient descent (SGD) optimizer.
 ///

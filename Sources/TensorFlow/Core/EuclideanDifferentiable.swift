@@ -18,8 +18,6 @@ import Differentiation
 import _Differentiation
 #endif
 
-#if TENSORFLOW_USE_STANDARD_TOOLCHAIN
-
 #if canImport(ReflectionMirror)
 @_spi(Reflection) import ReflectionMirror
 #else
@@ -136,5 +134,3 @@ extension RNNCellInput: _EuclideanDifferentiable
 extension RNNCellOutput: _EuclideanDifferentiable
  where Output: EuclideanDifferentiable, State: EuclideanDifferentiable {}
 extension Tensor: _EuclideanDifferentiable where Scalar: TensorFlowFloatingPoint {}
-
-#endif

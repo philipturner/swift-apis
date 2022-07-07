@@ -398,7 +398,7 @@ xpath 2>/dev/null $(find /Library/Developer/Toolchains ~/Library/Developer/Toolc
 ```
 This allows one to build the package as:
 ```shell
-TOOLCHAINS=$(xpath 2>/dev/null $(find /Library/Developer/Toolchains ~/Library/Developer/Toolchains -type d -depth 1 -regex '.*/swift-DEVELOPMENT-SNAPSHOT-.*.xctoolchain' | sort -u | tail -n 1)/Info.plist "/plist/dict/key[. = 'CFBundleIdentifier']/following-sibling::string[1]//text()") swift build -Xswiftc -DTENSORFLOW_USE_STANDARD_TOOLCHAIN -Xcc -I/Library/tensorflow-2.4.0/usr/include -Xlinker -L/Library/tensorflow-2.4.0/usr/lib
+TOOLCHAINS=$(xpath 2>/dev/null $(find /Library/Developer/Toolchains ~/Library/Developer/Toolchains -type d -depth 1 -regex '.*/swift-DEVELOPMENT-SNAPSHOT-.*.xctoolchain' | sort -u | tail -n 1)/Info.plist "/plist/dict/key[. = 'CFBundleIdentifier']/following-sibling::string[1]//text()") swift build -Xcc -I/Library/tensorflow-2.4.0/usr/include -Xlinker -L/Library/tensorflow-2.4.0/usr/lib
 ```
 
 ### Running tests

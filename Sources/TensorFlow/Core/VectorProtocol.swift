@@ -18,8 +18,6 @@ import Differentiation
 import _Differentiation
 #endif
 
-#if TENSORFLOW_USE_STANDARD_TOOLCHAIN
-
 #if canImport(ReflectionMirror)
 @_spi(Reflection) import ReflectionMirror
 #else
@@ -31,12 +29,13 @@ import _Differentiation
 /// This should contain the methods of `VectorProtocol`
 /// that do not require Self constraints.
 public protocol _VectorProtocol {
+  /// The type of scalars in the vector space.
   typealias VectorSpaceScalar = Float
 
-  /// Adds the specified scalar to `self`.
+  /// Adds the given scalar to `self`.
   mutating func add(_ x: VectorSpaceScalar)
 
-  /// Subtracts the specified scalar to `self`.
+  /// Subtracts the given scalar from `self`.
   mutating func subtract(_ x: VectorSpaceScalar)
 
   /// Scales `self` by the specified scalar.
@@ -87,17 +86,16 @@ extension _VectorProtocol {
 /// A type that represents an unranked vector space. Values of this type are
 /// elements in this vector space and have either no shape or a static shape.
 public protocol VectorProtocol: _VectorProtocol & AdditiveArithmetic {
-#if !TENSORFLOW_USE_STANDARD_TOOLCHAIN
-  /// The type of scalars in the vector space.
-  associatedtype VectorSpaceScalar = Float
-#endif
-
+  /// Returns `self` plus the given scalar.
   func adding(_ x: VectorSpaceScalar) -> Self
 
+  /// Adds the given scalar to `self`.
   mutating func add(_ x: VectorSpaceScalar)
 
+  /// Returns `self` minus the given scalar.
   func subtracting(_ x: VectorSpaceScalar) -> Self
 
+  /// Subtracts the given scalar from `self`.
   mutating func subtract(_ x: VectorSpaceScalar)
 
   /// Returns `self` multiplied by the given scalar.
@@ -142,5 +140,3 @@ extension VectorProtocol {
 extension Tensor: _VectorProtocol where Scalar: TensorFlowFloatingPoint {}
 extension Array.DifferentiableView: _VectorProtocol
 where Element: Differentiable & VectorProtocol {}
-
-#endif
