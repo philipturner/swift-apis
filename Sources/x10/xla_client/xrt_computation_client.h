@@ -34,6 +34,7 @@
 #include "tensorflow/compiler/xla/xla_client/metrics.h"
 #include "tensorflow/compiler/xla/xla_client/triggered_task.h"
 #include "tensorflow/compiler/xla/xla_client/util.h"
+#include "tensorflow/compiler/xla/xla_client/xrt_local_service.h"
 #include "tensorflow/compiler/xla/xla_client/xrt_session.h"
 #include "tensorflow/compiler/xla/xla_client/xrt_session_cache.h"
 #include "tensorflow/cc/client/client_session.h"
@@ -497,7 +498,7 @@ class XrtComputationClient : public ComputationClient,
   static std::string GetLocalTarget(const Options& options);
 
   // Checks whether a local GRPC service is required, and starts it if need it.
-  static void MaybeCreateLocalService(const Options& options);
+  void MaybeCreateLocalService(const Options& options);
 
   Options options_;
   std::mutex lock_;
@@ -505,6 +506,7 @@ class XrtComputationClient : public ComputationClient,
   std::unique_ptr<XrtSessionCache> session_cache_;
   std::unique_ptr<XrtSessionCache> alloc_session_cache_;
   std::unique_ptr<util::TriggeredTask> triggered_task_;
+  std::unique_ptr<XrtLocalService> local_service_;
   util::Cache<CompilationCacheKey, Computation, CompilationCacheKey::Hash>
       compilation_cache_;
   std::atomic<size_t> rng_seed_;

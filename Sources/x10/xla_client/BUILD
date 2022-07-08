@@ -103,7 +103,7 @@ cc_library(
         "//tensorflow/core/profiler/rpc:profiler_server_impl",
         "//tensorflow/core/profiler/rpc/client:profiler_client",
         "//tensorflow/core/protobuf/tpu:topology_proto_cc",
-        "//tensorflow/core/profiler/lib:traceme",
+        "//tensorflow/core/tpu:tpu_api_dlsym_initializer",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/numeric:int128",
         "@com_google_absl//absl/strings",
