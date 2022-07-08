@@ -23,6 +23,8 @@
 #include "tensorflow/compiler/tf2xla/xla_tensor/tensor.h"
 #include "tensorflow/compiler/xla/xla_client/computation_client.h"
 #include "tensorflow/compiler/xla/xla_client/multi_wait.h"
+#include "tensorflow/compiler/xla/xla_client/profiler.h"
+#include "tensorflow/core/profiler/lib/traceme.h"
 
 DeviceType ConvertDeviceType(swift_xla::DeviceType device_type) {
   switch (device_type) {
@@ -147,6 +149,8 @@ void syncLiveTensorsForDevices(struct DeviceList* device_list) {
 
 void XLATensor_LazyTensorBarrier(const struct CDevice* device,
                                  struct DeviceList* device_list, bool wait) {
+  tensorflow::profiler::TraceMe activity(
+      "LazyTensorBarrier", tensorflow::profiler::TraceMeLevel::kInfo);
   const auto device_strings = DeviceListToStrings(device_list);
   swift_xla::Device tmp_device;
   if (device) tmp_device = ConvertDevice(*device);
