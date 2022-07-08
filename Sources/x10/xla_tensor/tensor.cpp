@@ -834,6 +834,23 @@ std::vector<xla::ComputationClient::DataPtr> XLATensor::GatherTensorsXlaData(
   return result_tensors_data;
 }
 
+void XLATensor::TensorCollectionBarrier(SyncTensorCollection* coll) {
+  static const std::string invalid_device(
+      "Unknown0"); /* Temp solution to identify unassigned devices */
+  if (coll->device.ToString().compare(invalid_device) == 0 ||
+      coll->unlocker.size() > 0) {
+    return;
+  }
+  TF_VLOG(4) << "Waiting on device barrier for device " << coll->device
+             << " ...";
+  {
+    XLA_TIMED("DeviceLockWait");
+    coll->unlocker = LockDevices({coll->device});
+  }
+  TF_VLOG(4) << "Waiting on device barrier for device " << coll->device
+             << " done!";
+}
+
 std::vector<at::Tensor> XLATensor::GetTensorsOpByOp(
     std::vector<XLATensor>* tensors) {
   SyncTensorsConfig config;
@@ -845,6 +862,7 @@ std::vector<at::Tensor> XLATensor::GetTensorsOpByOp(
                                     &coll.indices);
 
     std::vector<ir::Value> roots = CollectRoots(*tensors, coll.indices);
+    TensorCollectionBarrier(&coll);
     async_tensors_data =
         OpByOpExecutor::Get()->Execute(roots, coll.device.ToString(), {});
   }
@@ -1028,14 +1046,6 @@ XLATensor::SyncTensorCollection XLATensor::CollectSyncTensors(
   coll.config = config;
   coll.device = *unique_device;
   coll.indices.reserve(tensors.size());
-  TF_VLOG(4) << "Waiting on device barrier for device " << coll.device
-             << " ...";
-  {
-    XLA_TIMED("DeviceLockWait");
-    coll.unlocker = LockDevices(unique_device.AsSet());
-  }
-  TF_VLOG(4) << "Waiting on device barrier for device " << coll.device
-             << " done!";
   for (size_t i = 0; i < tensors.size(); ++i) {
     if (tensors[i].CurrentXlaData() == nullptr) {
       ir::Value ir_value = tensors[i].CurrentIrValue();
@@ -1118,7 +1128,10 @@ XLATensor::ComputationCache* XLATensor::GetComputationCache() {
 }
 
 XLATensor::PostOrderData XLATensor::RunPostOrder(
-    const std::vector<XLATensor>& tensors, absl::Span<const size_t> indices) {
+    const std::vector<XLATensor>& tensors, SyncTensorCollection *coll) {
+  tensorflow::profiler::TraceMe activity(
+      "RunPostOrder", tensorflow::profiler::TraceMeLevel::kInfo);
+  absl::Span<const size_t> indices = coll->indices;
   std::vector<const ir::Node*> roots;
   roots.reserve(indices.size());
   for (auto index : indices) {
@@ -1129,9 +1142,15 @@ XLATensor::PostOrderData XLATensor::RunPostOrder(
   po_data.post_order = ir::Util::ComputePostOrder(roots, &po_data.emission_map);
   absl::node_hash_map<xla::ComputationClient::Data::OpaqueHandle, size_t>
       data_handles;
+
   for (auto node : po_data.post_order) {
     const ir::ops::DeviceData* device_data = ir::ops::DeviceData::Cast(node);
     if (device_data != nullptr) {
+      /* Acceptable race condition: HasValue may return false. This is OK
+       * since the conditional barrier is a performance optimization. */
+      if (!device_data->data()->HasValue()) {
+        TensorCollectionBarrier(coll);
+      }
       xla::ComputationClient::Data::OpaqueHandle handle =
           device_data->data()->GetOpaqueHandle();
       auto it = data_handles.find(handle);
@@ -1194,6 +1213,7 @@ std::shared_ptr<XLATensor::Async> XLATensor::ScheduleSyncTensorsGraph(
     ComputationCache::TypePtr cached_computation) {
   tensorflow::profiler::TraceMe activity(
       "ScheduleSyncTensorsGraph", tensorflow::profiler::TraceMeLevel::kInfo);
+  TensorCollectionBarrier(coll);
   std::shared_ptr<Async> async = std::make_shared<Async>(
       coll, std::move(parameters_data), std::move(tensors_data),
       std::move(cached_computation));
@@ -1317,6 +1337,7 @@ XLATensor::OpByOpAsync XLATensor::SyncTensorsGraphOpByOp(
 
   std::vector<ir::Value> roots = CollectRoots(*tensors, coll.indices);
   auto tensors_data = FetchTensorData(tensors, coll.config, coll.indices);
+  TensorCollectionBarrier(&coll);
   auto async = std::make_shared<Async>(std::move(coll), std::move(tensors_data),
                                        std::move(roots), devices);
 
@@ -1468,12 +1489,15 @@ std::shared_ptr<XLATensor::Async> XLATensor::SyncTensorsGraphInternal(
       "SyncTensorsGraphInternal", tensorflow::profiler::TraceMeLevel::kInfo);
   SyncTensorCollection coll = CollectSyncTensors(*tensors, config);
   if (coll.indices.empty()) {
+    /* Enure previous execution is complete before exiting this
+     * function */
+    TensorCollectionBarrier(&coll);
     return nullptr;
   }
+  PostOrderData po_data = RunPostOrder(*tensors, &coll);
   DebugUtil::SaveTensorsGraphInfo("ScheduleSyncTensorsGraph", *tensors,
                                   &coll.indices);
 
-  PostOrderData po_data = RunPostOrder(*tensors, coll.indices);
   InsertTraceletCutpoint(po_data);
   coll.hash = xla::util::HashCombine(
       coll.hash, xla::util::Hash(po_data.parameter_sequence));

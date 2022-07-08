@@ -44,7 +44,7 @@
 #include "tensorflow/core/framework/allocator.h"
 #include "tensorflow/core/platform/net.h"
 #include "tensorflow/core/profiler/lib/traceme.h"
-#include "tensorflow/core/tpu/tpu_api_dlsym_initializer.h"
+#include "tensorflow/core/tpu/tpu_initializer_helper.h"
 #include "tensorflow/core/protobuf/cluster.pb.h"
 #include "tensorflow/core/util/device_name_utils.h"
 
