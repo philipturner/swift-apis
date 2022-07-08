@@ -27,7 +27,7 @@ void MultiWait::Done() {
   {
     std::lock_guard<std::mutex> lock(mutex_);
     completed_count_ += 1;
-    notify = completed_count_ >= count_;
+    notify = completed_count_ == count_;
   }
   if (notify) {
     cv_.notify_all();
@@ -69,6 +69,20 @@ std::function<void()> MultiWait::Completer(std::function<void()> func) {
       exptr_ = std::current_exception();
     }
     Done();
+  };
+  return completer;
+}
+
+std::function<void()> MultiWait::Completer(std::shared_ptr<MultiWait> mwait,
+                                           std::function<void()> func) {
+  auto completer = [mwait = std::move(mwait), func = std::move(func)]() {
+    try {
+      func();
+    } catch (...) {
+      std::lock_guard<std::mutex> lock(mwait->mutex_);
+      mwait->exptr_ = std::current_exception();
+    }
+    mwait->Done();
   };
   return completer;
 }

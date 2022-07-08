@@ -673,7 +673,7 @@ XrtComputationClient::XrtDevice::TransferToServer(
   }
   XLA_COUNTER("XrtPartitionedTransferToServer", 1);
 
-  util::MultiWait mwait(partitions.size());
+  auto mwait = std::make_shared<util::MultiWait>(partitions.size());
   std::vector<DataPtr> results(tensors.size());
   for (size_t i = 0; i < partitions.size(); ++i) {
     auto sender = [&, i]() {
@@ -687,9 +687,10 @@ XrtComputationClient::XrtDevice::TransferToServer(
         results[base_index + r] = std::move(partitions_results[r]);
       }
     };
-    env::ScheduleIoClosure(mwait.Completer(std::move(sender)));
+    env::ScheduleIoClosure(
+        util::MultiWait::Completer(mwait, std::move(sender)));
   }
-  mwait.Wait();
+  mwait->Wait();
   return results;
 }
 
@@ -701,7 +702,7 @@ XrtComputationClient::TransferToServerInternal(
   std::mutex lock;
   XrtSessionCache::SessionMap session_map;
   int64_t total_size = 0;
-  util::MultiWait mwait(tensors.size());
+  auto mwait = std::make_shared<util::MultiWait>(tensors.size());
   std::map<XrtSession*, SessionWork> session_work_map;
   std::string device = device_ptr->name();
   {
@@ -734,13 +735,14 @@ XrtComputationClient::TransferToServerInternal(
           total_size += tdata.size();
         }
       };
-      env::ScheduleClosure(mwait.Completer(std::move(converter)));
+      env::ScheduleClosure(
+          util::MultiWait::Completer(mwait, std::move(converter)));
     }
-    mwait.Wait();
+    mwait->Wait();
   }
   OutboundDataMetric()->AddSample(total_size);
 
-  mwait.Reset(session_work_map.size());
+  mwait->Reset(session_work_map.size());
   std::vector<DataPtr> results(tensors.size());
   for (auto& session_session_work : session_work_map) {
     XrtSession* session = session_session_work.first;
@@ -758,9 +760,10 @@ XrtComputationClient::TransferToServerInternal(
       }
       CreateDataHandlesCounter()->AddValue(outputs.size());
     };
-    env::ScheduleIoClosure(mwait.Completer(std::move(runner)));
+    env::ScheduleIoClosure(
+        util::MultiWait::Completer(mwait, std::move(runner)));
   }
-  mwait.Wait();
+  mwait->Wait();
   return results;
 }
 
@@ -796,24 +799,29 @@ std::vector<Literal> XrtComputationClient::TransferFromServerImpl(
     session_work->index_mapping.push_back(i);
   }
 
+  auto mwait = std::make_shared<util::MultiWait>(session_work_map.size());
   int64_t total_size = 0;
   std::vector<Literal> results(handles.size());
-  for (auto& session_work : session_work_map) {
-    std::vector<tensorflow::Tensor> outputs;
-    XLA_CHECK_OK(session_work.first->session()->Run(
-        session_work.second.feed_inputs, session_work.second.outputs_handles,
-        &outputs));
-    XLA_CHECK_EQ(outputs.size(), session_work.second.outputs_handles.size());
-
-    for (size_t i = 0; i < outputs.size(); ++i) {
-      size_t li = session_work.second.index_mapping[i];
-      LiteralProto response;
-      XLA_CHECK(
-          response.ParseFromString(outputs[i].scalar<tensorflow::tstring>()()));
-      results[li] = std::move(Literal::CreateFromProto(response).ValueOrDie());
-      total_size += results[li].size_bytes();
-    }
+  for (auto& session_session_work : session_work_map) {
+    XrtSession* session = session_session_work.first;
+    SessionWork* session_work = &session_session_work.second;
+    auto runner = [&, session, session_work]() {
+      std::vector<tensorflow::Tensor> outputs;
+      XLA_CHECK_OK(session->session()->Run(
+          session_work->feed_inputs, session_work->outputs_handles, &outputs));
+      XLA_CHECK_EQ(outputs.size(), session_work->outputs_handles.size());
+      for (size_t i = 0; i < outputs.size(); ++i) {
+        size_t li = session_work->index_mapping[i];
+        LiteralProto response = ParseProto<LiteralProto>(outputs[i]);
+        results[li] =
+            std::move(Literal::CreateFromProto(response).ValueOrDie());
+        total_size += results[li].size_bytes();
+      }
+    };
+    env::ScheduleIoClosure(
+            util::MultiWait::Completer(mwait, std::move(runner)));
   }
+  mwait->Wait();
   InboundDataMetric()->AddSample(total_size);
   return results;
 }
@@ -824,7 +832,7 @@ std::vector<ComputationClient::ComputationPtr> XrtComputationClient::Compile(
   metrics::TimedSection timed(CompileMetric());
 
   std::mutex lock;
-  util::MultiWait mwait(instances.size());
+  auto mwait = std::make_shared<util::MultiWait>(instances.size());
   std::vector<ProgramShape> program_shapes(instances.size());
   std::vector<ComputationPtr> results(instances.size());
   std::vector<CompilationCacheKey> cache_keys(instances.size());
@@ -863,10 +871,10 @@ std::vector<ComputationClient::ComputationPtr> XrtComputationClient::Compile(
         results[i] = computation_ptr;
       }
     };
-    env::ScheduleClosure(mwait.Completer(std::move(builder)));
+    env::ScheduleClosure(util::MultiWait::Completer(mwait, std::move(builder)));
   }
-  mwait.Wait();
-  mwait.Reset(session_work_map.size());
+  mwait->Wait();
+  mwait->Reset(session_work_map.size());
 
   for (auto& session_and_work : session_work_map) {
     XrtSession* session = session_and_work.first;
@@ -894,9 +902,10 @@ std::vector<ComputationClient::ComputationPtr> XrtComputationClient::Compile(
         CreateCompileHandlesCounter()->AddValue(1);
       }
     };
-    env::ScheduleIoClosure(mwait.Completer(std::move(session_runner)));
+    env::ScheduleIoClosure(
+        util::MultiWait::Completer(mwait, std::move(session_runner)));
   }
-  mwait.Wait();
+  mwait->Wait();
   return results;
 }
 
@@ -987,7 +996,7 @@ XrtComputationClient::RunComputations(
   }
   XLA_CHECK_EQ(computations.size(), devices.size());
 
-  util::MultiWait mwait(session_replicas.size());
+  auto mwait = std::make_shared<util::MultiWait>(session_replicas.size());
   std::vector<std::vector<DataPtr>> results(devices.size());
   for (auto& sess_replica : session_replicas) {
     XrtSession* session = sess_replica.first;
@@ -1016,9 +1025,10 @@ XrtComputationClient::RunComputations(
             devices[replica]);
       }
     };
-    env::ScheduleIoClosure(mwait.Completer(std::move(session_runner)));
+    env::ScheduleIoClosure(
+        util::MultiWait::Completer(mwait, std::move(session_runner)));
   }
-  mwait.Wait();
+  mwait->Wait();
   return results;
 }
 
