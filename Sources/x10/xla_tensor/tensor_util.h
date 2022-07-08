@@ -59,7 +59,8 @@ xla::hash_t TensorHash(const at::Tensor& tensor);
 // Retrieves the device data handles by parallel uploading data onto the
 // corresponding devices.
 std::vector<xla::ComputationClient::DataPtr> CreateTensorsData(
-    const std::vector<at::Tensor>& tensors, const std::string& device);
+    const std::vector<at::Tensor>& tensors,
+    const std::string& device);
 
 // Creates an XLA literal out of an ATEN tensor. If shape is specified, that
 // shape+layout will be used, otherwise one will be generated out of the ATEN
@@ -93,6 +94,8 @@ xla::PrimitiveType GetDevicePrimitiveType(xla::PrimitiveType type,
 // Converts the given scalar type to an XLA primitive type.
 xla::PrimitiveType MakeXlaPrimitiveType(at::ScalarType scalar_type,
                                         const Device* device);
+
+bool RequiresRawTypeCasting(at::ScalarType scalar_type, const Device* device);
 
 xla::PrimitiveType GetShapeDimensionType(const Device* device);
 

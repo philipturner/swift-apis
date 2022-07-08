@@ -73,6 +73,7 @@ class XLATensor {
   void ShallowCopyTo(XLATensor* dest) const;
 
   at::ScalarType dtype() const;
+  c10::optional<at::ScalarType> dtype_optional() const;
 
   at::ScalarType physical_scalar_type() const;
 
@@ -404,6 +405,10 @@ class XLATensor {
                              bool read_only) const;
 
   XLATensor CopyTensorToDevice(const Device& device);
+
+  ir::Value MaybeCastIrValue(
+      ir::Value ir_value, const Device& device,
+      c10::optional<at::ScalarType> logical_element_type) const;
 
  public:
   // Create a new XLA tensor with the same metadata of the input tensor (with

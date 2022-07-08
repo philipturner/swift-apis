@@ -17,8 +17,6 @@
 #include <algorithm>
 #include <vector>
 
-#include "tensorflow/compiler/xla/xla_client/debug_macros.h"
-#include "tensorflow/compiler/xla/xla_client/util.h"
 #include "tensorflow/compiler/tf2xla/xla_tensor/convert_ops.h"
 #include "tensorflow/compiler/tf2xla/xla_tensor/data_ops.h"
 #include "tensorflow/compiler/tf2xla/xla_tensor/helpers.h"
@@ -31,6 +29,9 @@
 #include "tensorflow/compiler/xla/client/lib/slicing.h"
 #include "tensorflow/compiler/xla/shape_util.h"
 #include "tensorflow/compiler/xla/util.h"
+#include "tensorflow/compiler/xla/xla_client/debug_macros.h"
+#include "tensorflow/compiler/xla/xla_client/util.h"
+#include "tensorflow/stream_executor/dnn.h"
 
 namespace swift_xla {
 namespace {
@@ -550,7 +551,8 @@ xla::XlaOp CreateIndexUpdate(
   const xla::Shape& indices_shape = XlaHelpers::ShapeOfXlaOp(indices);
   const xla::Shape& values_shape = XlaHelpers::ShapeOfXlaOp(values);
 
-  absl::Span<const int64_t> indices_dims = indices_shape.dimensions();
+  absl::Span<const int64_t> indices_dims =
+      stream_executor::dnn::AsInt64Slice(indices_shape.dimensions());
   XLA_CHECK(!indices_dims.empty());
   // The minor dimension of indices contains the indices to update.
   int64_t num_index_dims = indices_dims.back();

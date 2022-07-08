@@ -100,10 +100,15 @@ class XrtComputationClient::XrtDevice : public ComputationClient::Device {
 XrtComputationClient::XrtData::XrtData(XrtDevice* device, Shape device_shape,
                                        int64_t handle)
     : Data(device, std::move(device_shape)),
-      handle_ptr(std::make_shared<XrtHandle>(handle, [device, handle]() {
+      handle_ptr(std::make_shared<XrtHandle>(handle, [device](int64_t handle) {
         reinterpret_cast<XrtComputationClient*>(device->computation_client())
             ->ReleaseXrtData(device->name(), handle);
       })) {}
+
+XrtComputationClient::XrtData::XrtData(XrtDevice* device, Shape device_shape,
+                                       XrtHandlePtr handle)
+    : Data(device, std::move(device_shape)),
+      handle_ptr(handle) {}
 
 namespace {
 
@@ -267,6 +272,9 @@ bool ShouldStartLocalService(const std::set<std::string>& devices) {
   int shard_ordinal = sys_util::GetEnvInt(env::kEnvShardOrdinal, -1);
   int world_size = sys_util::GetEnvInt(env::kEnvWorldSize, -1);
   if (tpuvm_mode && (shard_ordinal % 8 == 0) && (world_size > 8)) {
+    return false;
+  }
+  if (!sys_util::GetEnvBool(env::kEnvStartService, true)) {
     return false;
   }
   // Only the process with CPU device and GPU device should start the local

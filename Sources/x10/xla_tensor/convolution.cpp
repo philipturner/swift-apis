@@ -255,10 +255,12 @@ xla::XlaOp BuildGradBias(xla::XlaOp grad_output) {
       BiasReduceDimensions(grad_output_shape.rank()));
 }
 
-xla::XlaOp BuildTransposedConvolution(
-    xla::XlaOp input, xla::XlaOp kernel, absl::Span<const int64_t> stride,
-    absl::Span<const int64_t> padding, absl::Span<const int64_t> dilation,
-    absl::Span<const int64_t> output_padding, int64_t groups) {
+xla::XlaOp BuildTransposedConvolution(xla::XlaOp input, xla::XlaOp kernel,
+                                      absl::Span<const int64_t> stride,
+                                      absl::Span<const int64_t> padding,
+                                      absl::Span<const int64_t> dilation,
+                                      absl::Span<const int64_t> output_padding,
+                                      int64_t groups) {
   const xla::Shape& input_shape = XlaHelpers::ShapeOfXlaOp(input);
   const xla::Shape& kernel_shape = XlaHelpers::ShapeOfXlaOp(kernel);
   int64_t num_spatial = input_shape.rank() - 2;

@@ -55,6 +55,17 @@ std::ostream& operator<<(std::ostream& ostrm, const ::grpc::Status& status) {
   }
   return ostrm;
 }
+
+std::basic_ostringstream<char>& operator<<(std::basic_ostringstream<char> ostrm,
+                                           const ::grpc::Status& status) {
+  if (status.ok()) {
+    ostrm << "OK";
+  } else {
+    ostrm << status.error_message() << " ("
+          << static_cast<int>(status.error_code()) << ")";
+  }
+  return ostrm;
+}
 }
 
 namespace xla {
@@ -113,7 +124,9 @@ class MeshServiceImpl : public grpc::MeshService::Service {
     void Complete(int64_t ordinal, std::string payload,
                   const std::set<int64_t>& replicas);
 
-    const std::map<int64_t, std::string>& Payloads() const { return payloads_; };
+    const std::map<int64_t, std::string>& Payloads() const {
+      return payloads_;
+    };
 
    private:
     size_t count_;
