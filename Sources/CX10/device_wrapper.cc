@@ -113,11 +113,19 @@ CDevice getDefaultDevice() {
 
 void setReplicationDevices(struct DeviceList* device_list) {
   const auto device_strings = DeviceListToStrings(device_list);
-  xla::ComputationClient::SetReplicationDevices(device_strings);
+  auto replication_devices =
+      std::make_shared<std::vector<std::string>>(device_strings);
+  xla::ComputationClient::Get()->SetReplicationDevices(
+      std::move(replication_devices));
 }
 
 struct DeviceList* getReplicationDevices() {
-  return DeviceListFromStrings(xla::ComputationClient::GetReplicationDevices());
+  auto replication_devices =
+      xla::ComputationClient::Get()->GetReplicationDevices();
+  if (replication_devices != nullptr)
+    return DeviceListFromStrings(*replication_devices);
+  else
+    return nullptr;
 }
 
 void syncLiveTensorsForDevices(struct DeviceList* device_list) {

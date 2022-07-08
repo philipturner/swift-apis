@@ -393,7 +393,7 @@ class XLATensor::DeviceContextArena {
     ForAllDeviceContexts(fn, device);
   }
 
-  void StepRngSeed(const Device* device) {
+  void MarkStep(const Device* device) {
     auto fn = [&](DeviceContext* devctx) {
       std::lock_guard<std::mutex> lock(devctx->lock);
       devctx->seed = 1012031 + devctx->seed * 7012063;
@@ -1255,7 +1255,7 @@ void XLATensor::SyncLiveTensorsGraph(const Device* device,
 
 void XLATensor::MarkStep(const Device* device) {
   XLA_COUNTER("MarkStep", 1);
-  DeviceContextArena::Get()->StepRngSeed(device);
+  DeviceContextArena::Get()->MarkStep(device);
   ir::ScopePusher::ResetScopes();
   g_tls_data.Reset();
 }
@@ -1410,7 +1410,7 @@ XLATensor::CompilationResult XLATensor::Compile(
   std::vector<std::shared_ptr<xla::ComputationClient::Computation>>
       computations =
           xla::GetX10Device(coll.device.ToString())
-              ->Compile(xla::ComputationClient::GetCompilationDevices(
+              ->Compile(xla::ComputationClient::Get()->GetCompilationDevices(
                             coll.device.ToString(), devices),
                         std::move(instances));
   TF_VLOG(3) << "Compiling IR graph hash " << xla::util::HexHash(coll.hash)

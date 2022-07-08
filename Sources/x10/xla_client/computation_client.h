@@ -250,9 +250,10 @@ class ComputationClient {
 
   Device* GetDevice(const std::string& device_name) const;
 
-  static void SetReplicationDevices(std::vector<std::string> devices);
+  virtual void SetReplicationDevices(
+      std::shared_ptr<std::vector<std::string>> devices) = 0;
 
-  static const std::vector<std::string>& GetReplicationDevices();
+  virtual std::shared_ptr<std::vector<std::string>> GetReplicationDevices() = 0;
 
   virtual void SetRngSeed(size_t seed) = 0;
 
@@ -274,12 +275,15 @@ class ComputationClient {
   // Compile() API. If the devices array is empty, a vector with the single
   // device will be returned. Otherwise a vector with the devices content will
   // be returned.
-  static std::vector<std::string> GetCompilationDevices(
+  std::vector<std::string> GetCompilationDevices(
       const std::string& device, absl::Span<const std::string> devices);
 
   // Retrieves the ordinal number out of a device string. This is the number
   // after the last ':' character of the device string.
   static int64_t GetDeviceOrdinal(const std::string& device);
+  
+  // Returns the ComputationClient singleton.
+  static ComputationClient* Get();
 
   // Metrics common to all client intrfaces.
   static metrics::Metric* TransferToServerMetric();
@@ -304,9 +308,6 @@ class ComputationClient {
 
  protected:
   void AddDevice(std::unique_ptr<Device> device);
-
-  // Returns the ComputationClient singleton.
-  static ComputationClient* Get();
 
   static ComputationClient* GetIfInitialized();
 

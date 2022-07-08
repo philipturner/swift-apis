@@ -191,6 +191,11 @@ class XrtComputationClient : public ComputationClient,
 
   std::vector<std::string> GetLocalDevices() const;
 
+  void SetReplicationDevices(
+      std::shared_ptr<std::vector<std::string>> devices) override;
+
+  std::shared_ptr<std::vector<std::string>> GetReplicationDevices() override;
+
   void SetRngSeed(size_t seed) override;
 
   std::map<std::string, Metric> GetMetrics() const override;
@@ -322,6 +327,9 @@ class XrtComputationClient : public ComputationClient,
 
   void InitializeDevices(
       std::unique_ptr<tensorflow::tpu::TopologyProto> topology_proto);
+
+  service::grpc::Config CreateMeshServiceConfig(
+      const tensorflow::tpu::TopologyProto* topology_proto) const;
 
   void CreateMeshService(const std::string& address,
                          const tensorflow::tpu::TopologyProto* topology_proto);
@@ -507,6 +515,7 @@ class XrtComputationClient : public ComputationClient,
   // The mesh service which is used to coordinate all the client hosts which are
   // feeding different TPU devices in a POD (or slice) training.
   std::unique_ptr<service::MeshService> mesh_service_;
+  std::shared_ptr<std::vector<std::string>> replication_devices_;
 };
 
 }  // namespace xla

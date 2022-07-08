@@ -25,6 +25,8 @@
 
 #include <atomic>
 #include <chrono>
+#include <exception>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <mutex>
@@ -76,11 +78,15 @@ namespace {
 
 class MeshServiceImpl : public grpc::MeshService::Service {
  public:
-  explicit MeshServiceImpl(grpc::Config config) : config_(std::move(config)) {}
+  explicit MeshServiceImpl(grpc::Config config);
 
   ::grpc::Status GetConfig(::grpc::ServerContext* context,
                            const grpc::GetConfigRequest* request,
                            grpc::GetConfigResponse* response) override;
+
+  ::grpc::Status SetConfig(::grpc::ServerContext* context,
+                           const grpc::SetConfigRequest* request,
+                           grpc::SetConfigResponse* response) override;
 
   ::grpc::Status Rendezvous(::grpc::ServerContext* context,
                             const grpc::RendezvousRequest* request,
@@ -102,39 +108,10 @@ class MeshServiceImpl : public grpc::MeshService::Service {
 
     bool Release() { return release_count_.fetch_add(1) == 0; }
 
-    ::grpc::Status Wait() {
-      ::grpc::Status status =
-          ToGrpcStatus(xla::util::CheckedCall([&]() { mwait_.Wait(); }));
-      if (status.ok()) {
-        std::lock_guard<std::mutex> lock(lock_);
-        status = status_;
-      }
-      return status;
-    }
+    ::grpc::Status Wait();
 
     void Complete(int64_t ordinal, std::string payload,
-                  const std::set<int64_t>& replicas) {
-      std::lock_guard<std::mutex> lock(lock_);
-      if ((!replicas_.empty() && replicas_.count(ordinal) == 0) ||
-          (replicas_.empty() && ordinal >= count_)) {
-        status_ = ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
-                                 absl::StrCat("Invalid ordinal: ", ordinal));
-      } else if (replicas != replicas_) {
-        status_ = ::grpc::Status(
-            ::grpc::StatusCode::INVALID_ARGUMENT,
-            absl::StrCat("Mismatching replicas: (",
-                         absl::StrJoin(replicas_, ", "), ") vs. (",
-                         absl::StrJoin(replicas, ", "), ")"));
-      } else {
-        auto insert_result = payloads_.emplace(ordinal, std::move(payload));
-        if (!insert_result.second) {
-          status_ =
-              ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
-                             absl::StrCat("Duplicate ordinal: ", ordinal));
-        }
-      }
-      mwait_.Done();
-    }
+                  const std::set<int64_t>& replicas);
 
     const std::map<int64_t, std::string>& Payloads() const { return payloads_; };
 
@@ -149,38 +126,80 @@ class MeshServiceImpl : public grpc::MeshService::Service {
   };
 
   std::shared_ptr<RendezvousData> GetRendezvous(
-      const std::string& tag, const std::set<int64_t>& replicas) {
-    std::lock_guard<std::mutex> lock(lock_);
-    auto it = rendezvous_map_.find(tag);
-    if (it == rendezvous_map_.end()) {
-      size_t count = replicas.empty() ? config_.mesh_size() : replicas.size();
-      it = rendezvous_map_
-               .emplace(tag, std::make_shared<RendezvousData>(count, replicas))
-               .first;
-    }
-    return it->second;
-  }
+      const std::string& tag, const std::set<int64_t>& replicas);
 
   void ReleaseRendezvous(const std::string& tag,
-                         const std::shared_ptr<RendezvousData>& rendezvous) {
-    if (rendezvous->Release()) {
-      std::lock_guard<std::mutex> lock(lock_);
-      rendezvous_map_.erase(tag);
-    }
-  }
+                         const std::shared_ptr<RendezvousData>& rendezvous);
+
+  static ::grpc::Status HandleRpc(
+      const std::function<::grpc::Status()>& rpc_fn);
 
   std::mutex lock_;
-  grpc::Config config_;
+  std::map<size_t, grpc::Config> configs_;
   absl::node_hash_map<std::string, std::shared_ptr<RendezvousData>>
       rendezvous_map_;
 };
 
+::grpc::Status MeshServiceImpl::RendezvousData::Wait() {
+  ::grpc::Status status =
+      ToGrpcStatus(xla::util::CheckedCall([&]() { mwait_.Wait(); }));
+  if (status.ok()) {
+    std::lock_guard<std::mutex> lock(lock_);
+    status = status_;
+  }
+  return status;
+}
+
+void MeshServiceImpl::RendezvousData::Complete(
+    int64_t ordinal, std::string payload, const std::set<int64_t>& replicas) {
+  std::lock_guard<std::mutex> lock(lock_);
+  if ((!replicas_.empty() && replicas_.count(ordinal) == 0) ||
+      (replicas_.empty() && ordinal >= count_)) {
+    status_ = ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
+                             absl::StrCat("Invalid ordinal: ", ordinal));
+  } else if (replicas != replicas_) {
+    status_ = ::grpc::Status(
+        ::grpc::StatusCode::INVALID_ARGUMENT,
+        absl::StrCat("Mismatching replicas: (", absl::StrJoin(replicas_, ", "),
+                     ") vs. (", absl::StrJoin(replicas, ", "), ")"));
+  } else {
+    auto insert_result = payloads_.emplace(ordinal, std::move(payload));
+    if (!insert_result.second) {
+      status_ = ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
+                               absl::StrCat("Duplicate ordinal: ", ordinal));
+    }
+  }
+  mwait_.Done();
+}
+
+MeshServiceImpl::MeshServiceImpl(grpc::Config config) {
+  configs_.emplace(0, std::move(config));
+}
+
 ::grpc::Status MeshServiceImpl::GetConfig(::grpc::ServerContext* context,
                                           const grpc::GetConfigRequest* request,
                                           grpc::GetConfigResponse* response) {
-  TF_VLOG(3) << "Got config fetch request: peer=" << context->peer();
-  *response->mutable_config() = config_;
-  return ::grpc::Status::OK;
+  auto rpc_fn = [&]() -> ::grpc::Status {
+    TF_VLOG(3) << "Got config fetch request: peer=" << context->peer();
+    response->mutable_config()->CopyFrom(configs_.at(request->ordinal()));
+    return ::grpc::Status::OK;
+  };
+  return HandleRpc(rpc_fn);
+}
+
+::grpc::Status MeshServiceImpl::SetConfig(::grpc::ServerContext* context,
+                                          const grpc::SetConfigRequest* request,
+                                          grpc::SetConfigResponse* response) {
+  auto rpc_fn = [&]() -> ::grpc::Status {
+    TF_VLOG(3) << "Got config set request: peer=" << context->peer()
+               << ", ordinal=" << request->ordinal();
+
+    std::lock_guard<std::mutex> lock(lock_);
+    XLA_CHECK_EQ(configs_.at(0).mesh_size(), request->config().mesh_size());
+    configs_.emplace(request->ordinal(), request->config());
+    return ::grpc::Status::OK;
+  };
+  return HandleRpc(rpc_fn);
 }
 
 ::grpc::Status MeshServiceImpl::Rendezvous(
@@ -217,6 +236,39 @@ class MeshServiceImpl : public grpc::MeshService::Service {
              << absl::StrJoin(replicas, ", ") << "), peer=" << context->peer();
   response->set_uid(nccl_detail::GetNcclUniqueUid(replicas));
   return ::grpc::Status::OK;
+}
+
+std::shared_ptr<MeshServiceImpl::RendezvousData> MeshServiceImpl::GetRendezvous(
+    const std::string& tag, const std::set<int64_t>& replicas) {
+  std::lock_guard<std::mutex> lock(lock_);
+  auto it = rendezvous_map_.find(tag);
+  if (it == rendezvous_map_.end()) {
+    size_t count =
+        replicas.empty() ? configs_.at(0).mesh_size() : replicas.size();
+    it = rendezvous_map_
+             .emplace(tag, std::make_shared<RendezvousData>(count, replicas))
+             .first;
+  }
+  return it->second;
+}
+
+void MeshServiceImpl::ReleaseRendezvous(
+    const std::string& tag, const std::shared_ptr<RendezvousData>& rendezvous) {
+  if (rendezvous->Release()) {
+    std::lock_guard<std::mutex> lock(lock_);
+    rendezvous_map_.erase(tag);
+  }
+}
+
+::grpc::Status MeshServiceImpl::HandleRpc(
+    const std::function<::grpc::Status()>& rpc_fn) {
+  try {
+    return rpc_fn();
+  } catch (const std::exception& ex) {
+    return ::grpc::Status(
+        ::grpc::StatusCode::ABORTED,
+        absl::StrCat("Exception while handling RPC: ", ex.what()));
+  }
 }
 
 }  // namespace
@@ -282,15 +334,28 @@ MeshClient::~MeshClient() {}
 
 const std::string& MeshClient::address() const { return impl_->address; }
 
-grpc::Config MeshClient::GetConfig() const {
+grpc::Config MeshClient::GetConfig(int ordinal) const {
   ::grpc::ClientContext context;
   grpc::GetConfigRequest request;
   grpc::GetConfigResponse response;
+  request.set_ordinal(ordinal);
   ::grpc::Status status = impl_->stub->GetConfig(&context, request, &response);
   if (!status.ok()) {
     XLA_ERROR() << "Failed to retrieve mesh configuration: " << status;
   }
   return std::move(*response.mutable_config());
+}
+
+void MeshClient::SetConfig(int ordinal, const grpc::Config& config) const {
+  ::grpc::ClientContext context;
+  grpc::SetConfigRequest request;
+  grpc::SetConfigResponse response;
+  request.set_ordinal(ordinal);
+  request.mutable_config()->CopyFrom(config);
+  ::grpc::Status status = impl_->stub->SetConfig(&context, request, &response);
+  if (!status.ok()) {
+    XLA_ERROR() << "Failed to set configuration: " << status;
+  }
 }
 
 std::vector<std::string> MeshClient::Rendezvous(

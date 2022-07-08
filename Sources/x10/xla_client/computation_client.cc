@@ -61,7 +61,12 @@ std::vector<std::string> ComputationClient::GetCompilationDevices(
     const std::string& device, absl::Span<const std::string> devices) {
   std::vector<std::string> compilation_devices;
   if (devices.empty()) {
-    compilation_devices.push_back(device);
+    auto replication_devices = GetReplicationDevices();
+    if (replication_devices == nullptr || replication_devices->empty()) {
+      compilation_devices.push_back(device);
+    } else {
+      compilation_devices = *replication_devices;
+    }
   } else {
     compilation_devices.insert(compilation_devices.end(), devices.begin(),
                                devices.end());
@@ -261,17 +266,6 @@ std::map<std::string, Metric> ComputationClient::ReadMetrics() {
 ComputationClient::Device* ComputationClient::DefaultDevice() {
   auto* client = Get();
   return client->GetDevice(client->GetDefaultDevice());
-}
-
-thread_local std::vector<std::string> g_replication_devices;  // NOLINT
-
-void ComputationClient::SetReplicationDevices(
-    std::vector<std::string> devices) {
-  g_replication_devices = std::move(devices);
-}
-
-const std::vector<std::string>& ComputationClient::GetReplicationDevices() {
-  return g_replication_devices;
 }
 
 swift_xla::Device ComputationClient::DefaultDeviceStruct() {

@@ -404,9 +404,7 @@ void AddXrtHostDevices(const std::string& worker_name, int task_no,
       {"GPU", "XLA_GPU",
        static_cast<int>(
            sys_util::GetEnvInt(env::kEnvNumGpu, device_counts.num_gpus))},
-      {"CPU", "XLA_CPU",
-       static_cast<int>(
-           sys_util::GetEnvInt(env::kEnvNumCpu, device_counts.num_cpus))},
+      {"CPU", "XLA_CPU", device_counts.num_cpus},
   };
   options->workers_map.emplace(
       XrtComputationClient::Worker(worker_name, task_no),
@@ -455,11 +453,14 @@ bool ParseMeshConfig(
 
   XrtComputationClient::Worker local_worker =
       XrtComputationClient::ParseWorker(local_worker_env);
+  int host_ordinal = sys_util::GetEnvInt(env::kEnvHostOrdinal, 0);
 
   TF_LOG(INFO) << "Fetching mesh configuration for worker " << local_worker.name
                << ":" << local_worker.task_no << " from mesh service at "
+               << " (host_ordinal=" << host_ordinal
+               << "):" << local_worker.task_no << " from mesh service at "
                << client->address();
-  service::grpc::Config config = client->GetConfig();
+  service::grpc::Config config = client->GetConfig(host_ordinal);
   TF_VLOG(3) << "Mesh Config: " << config.DebugString();
 
   std::string mp_device = XrtComputationClient::GetMultiProcessingDevice();
@@ -523,13 +524,14 @@ bool GpuIsAvailable() {
 }
 
 bool ParseEnvDeviceCounts(XrtComputationClient::Options* options) {
-  int num_tpus = sys_util::GetEnvInt(env::kEnvNumTpu, -1);
-  int num_gpus = sys_util::GetEnvInt(env::kEnvNumGpu, -1);
-  if (num_tpus > 0 || num_gpus > 0) {
+  DeviceCountDefaults device_counts;
+  device_counts.num_tpus = sys_util::GetEnvInt(env::kEnvNumTpu, 0);
+  device_counts.num_gpus = sys_util::GetEnvInt(env::kEnvNumGpu, 0);
+  if (device_counts.num_tpus > 0 || device_counts.num_gpus > 0) {
     std::map<std::string, int> device_ordinals;
     std::string host_port =
         absl::StrCat("localhost:", tensorflow::internal::PickUnusedPortOrDie());
-    AddXrtHostDevices("localservice", 0, host_port, DeviceCountDefaults(),
+    AddXrtHostDevices("localservice", 0, host_port, device_counts,
                       &device_ordinals, options);
   }
   return !options->global_device_map.empty();
@@ -1629,9 +1631,19 @@ void XrtComputationClient::InitializeDevices(
       sys_util::GetEnvString(env::kEnvMeshService, "");
   std::string mp_device = GetMultiProcessingDevice();
   if (!mesh_service_address.empty() && !mp_device.empty()) {
+    int host_ordinal = sys_util::GetEnvInt(env::kEnvHostOrdinal, -1);
     DeviceId device(mp_device);
-    if (device.ordinal == 0) {
-      CreateMeshService(mesh_service_address, topology_proto.get());
+    if (host_ordinal <= 0) {
+      if (device.ordinal == 0) {
+        CreateMeshService(mesh_service_address, topology_proto.get());
+      }
+    } else {
+      // Here we are in the sea-of-devices case.
+      if (device.ordinal == 0) {
+        service::grpc::Config config =
+            CreateMeshServiceConfig(topology_proto.get());
+        service::MeshClient::Get()->SetConfig(host_ordinal, config);
+      }
     }
     SetupGpuRuntime();
   }
@@ -1641,15 +1653,15 @@ void XrtComputationClient::SetupGpuRuntime() {
   LOG(FATAL) << "Not implemented yet; need to upgrade XRT first";
 }
 
-void XrtComputationClient::CreateMeshService(
-    const std::string& address,
-    const tensorflow::tpu::TopologyProto* topology_proto) {
+service::grpc::Config XrtComputationClient::CreateMeshServiceConfig(
+    const tensorflow::tpu::TopologyProto* topology_proto) const {
   struct Device {
     std::string local_name;
     std::string global_name;
   };
 
   service::grpc::Config config;
+  config.set_mesh_size(sys_util::GetEnvInt(env::kEnvWorldSize, 1));
   if (topology_proto != nullptr) {
     *config.mutable_proto() = *topology_proto;
   }
@@ -1674,7 +1686,13 @@ void XrtComputationClient::CreateMeshService(
       device->set_global_name(worker_device.global_name);
     }
   }
-  config.set_mesh_size(sys_util::GetEnvInt(env::kEnvWorldSize, 1));
+  return config;
+}
+
+void XrtComputationClient::CreateMeshService(
+    const std::string& address,
+    const tensorflow::tpu::TopologyProto* topology_proto) {
+  service::grpc::Config config = CreateMeshServiceConfig(topology_proto);
 
   TF_VLOG(1) << "Creating mesh service bound to " << address;
   mesh_service_ =
@@ -1718,6 +1736,18 @@ size_t XrtComputationClient::GetNumDevices() const {
 std::vector<std::string> XrtComputationClient::GetLocalDevices() const {
   return std::vector<std::string>(options_.devices.begin(),
                                   options_.devices.end());
+}
+
+void XrtComputationClient::SetReplicationDevices(
+    std::shared_ptr<std::vector<std::string>> devices) {
+  std::lock_guard<std::mutex> lock(lock_);
+  replication_devices_ = std::move(devices);
+}
+
+std::shared_ptr<std::vector<std::string>>
+XrtComputationClient::GetReplicationDevices() {
+  std::lock_guard<std::mutex> lock(lock_);
+  return replication_devices_;
 }
 
 void XrtComputationClient::SetRngSeed(size_t seed) { rng_seed_ = seed; }

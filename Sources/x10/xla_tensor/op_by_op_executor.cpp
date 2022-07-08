@@ -116,7 +116,7 @@ std::vector<xla::ComputationClient::ExecuteChainedOp> OpByOpExecutor::BuildOps(
   }
 
   auto compilation_devices =
-      xla::ComputationClient::GetCompilationDevices(device, devices);
+      xla::ComputationClient::Get()->GetCompilationDevices(device, devices);
   xla::hash_t nodes_key_seed = GetNodesKeySeed(device, compilation_devices);
   Device exec_device(device);
   std::vector<xla::hash_t> cache_keys;
