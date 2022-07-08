@@ -27,6 +27,7 @@
 #include "tensorflow/compiler/xla/xla_client/debug_macros.h"
 #include "tensorflow/compiler/xla/xla_client/mesh_service.h"
 #include "tensorflow/compiler/xla/xla_client/sys_util.h"
+#include "tensorflow/compiler/xla/xla_client/xrt_local_service.h"
 #include "tensorflow/compiler/xla/status_macros.h"
 #include "tensorflow/core/platform/stacktrace_handler.h"
 #include "tensorflow/core/util/device_name_utils.h"
@@ -72,6 +73,23 @@ std::vector<std::string> ComputationClient::GetCompilationDevices(
                                devices.end());
   }
   return compilation_devices;
+}
+
+void ComputationClient::RunLocalService(uint64_t service_port) {
+  try {
+    XrtLocalService* service = new XrtLocalService(
+        "localservice|localhost:" + std::to_string(service_port),
+        "localservice", 0);
+    service->Start();
+    service->Join();
+  } catch (const std::runtime_error& error) {
+    if (std::string(error.what()).find("Couldn't open device: /dev/accel0") !=
+        std::string::npos) {
+      TF_LOG(INFO) << "Local service has been created by other process, return";
+    } else {
+      throw;
+    }
+  }
 }
 
 int64_t ComputationClient::GetDeviceOrdinal(const std::string& device) {

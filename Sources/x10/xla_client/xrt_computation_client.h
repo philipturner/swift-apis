@@ -506,7 +506,7 @@ class XrtComputationClient : public ComputationClient,
   std::unique_ptr<XrtSessionCache> session_cache_;
   std::unique_ptr<XrtSessionCache> alloc_session_cache_;
   std::unique_ptr<util::TriggeredTask> triggered_task_;
-  std::unique_ptr<XrtLocalService> local_service_;
+  XrtLocalService* local_service_ = nullptr;
   util::Cache<CompilationCacheKey, Computation, CompilationCacheKey::Hash>
       compilation_cache_;
   std::atomic<size_t> rng_seed_;

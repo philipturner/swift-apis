@@ -55,6 +55,23 @@ void MaybeSaveHloGraph(const std::string& hlo_text, size_t index) {
   }
 }
 
+std::string MaybeDumpHloGraph(
+    const absl::Span<const Shape* const>& output_shapes,
+    const std::string& hlo_text, size_t index) {
+  static const bool dump_hlo =
+      sys_util::GetEnvBool("XLA_DUMP_HLO_GRAPH", false);
+  if (!dump_hlo) {
+    return {};
+  }
+  std::stringstream ss;
+  ss << ">>> Dumping Computation " << index << "\n";
+  ss << hlo_text << "\n";
+  if (index < output_shapes.size() && output_shapes[index] != nullptr) {
+    ss << "OutputShape: " << *output_shapes[index] << "\n\n";
+  }
+  return ss.str();
+}
+
 }  // namespace
 
 StatusOr<std::unique_ptr<HloModule>> CreateModuleFromProto(
@@ -78,11 +95,7 @@ void ReportComputationError(
   for (size_t i = 0; i < computations.size(); ++i) {
     std::string hlo_text = GetComputationHloText(*computations[i]).ValueOrDie();
     MaybeSaveHloGraph(hlo_text, i);
-    ss << ">>> Dumping Computation " << i << "\n";
-    ss << hlo_text << "\n";
-    if (i < output_shapes.size() && output_shapes[i] != nullptr) {
-      ss << "OutputShape: " << *output_shapes[i] << "\n\n";
-    }
+    ss << MaybeDumpHloGraph(output_shapes, hlo_text, i);
   }
   ss << "StackTrace:\n" << tensorflow::CurrentStackTrace() << "\n";
   ss << "Status: " << status << "\n";

@@ -262,6 +262,13 @@ class TensorAllocator : public tensorflow::Allocator {
 };
 
 bool ShouldStartLocalService(const std::set<std::string>& devices) {
+  // In the tpuvm pod setup, LocalService will be started in a separate process
+  bool tpuvm_mode = sys_util::GetEnvBool(env::kEnvTpuvmMode, false);
+  int shard_ordinal = sys_util::GetEnvInt(env::kEnvShardOrdinal, -1);
+  int world_size = sys_util::GetEnvInt(env::kEnvWorldSize, -1);
+  if (tpuvm_mode && (shard_ordinal % 8 == 0) && (world_size > 8)) {
+    return false;
+  }
   // Only the process with CPU device and GPU device should start the local
   // service.
   for (const std::string& device : devices) {
@@ -2296,8 +2303,7 @@ void XrtComputationClient::MaybeCreateLocalService(const Options& options) {
     std::string cluster_spec =
         absl::StrCat(job_name, "|", absl::StrJoin(hosts, ";"));
     TF_VLOG(2) << "Local Service Cluster Spec: " << cluster_spec;
-    local_service_ = absl::make_unique<XrtLocalService>(
-        cluster_spec, job_name, task_index);
+    local_service_ = new XrtLocalService(cluster_spec, job_name, task_index);
     local_service_->Start();
   }
 }
