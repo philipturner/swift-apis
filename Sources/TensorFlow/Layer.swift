@@ -65,7 +65,6 @@ extension Module where Input: TensorProtocol, Output: DifferentiableTensorProtoc
   @differentiable(reverse, wrt: self)
   public func callAsFunction(_ input: Input) -> Output {
     let activation = forward(input)
-    print("call with annotate")
     return annotated(activation)
   }
 
