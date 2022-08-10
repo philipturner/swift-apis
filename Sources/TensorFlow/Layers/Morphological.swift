@@ -16,7 +16,7 @@
 ///
 /// This layer returns the morphogical dilation of the input tensor with the provided filters
 @frozen
-public struct `Dilation2D`<Scalar: TensorFlowFloatingPoint>: Layer {
+public struct Dilation2D<Scalar: TensorFlowFloatingPoint>: Layer {
   /// The 4-D dilation filter.
   public var filter: Tensor<Scalar>
   /// The strides of the sliding window for spatial dimensions.
@@ -86,7 +86,7 @@ public struct `Dilation2D`<Scalar: TensorFlowFloatingPoint>: Layer {
 ///
 /// This layer returns the morphogical erosion of the input tensor with the provided filters
 @frozen
-public struct `Erosion2D`<Scalar: TensorFlowFloatingPoint>: Layer {
+public struct Erosion2D<Scalar: TensorFlowFloatingPoint>: Layer {
   /// The 4-D dilation filter.
   public var filter: Tensor<Scalar>
   /// The strides of the sliding window for spatial dimensions.

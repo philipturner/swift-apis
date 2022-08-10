@@ -46,7 +46,7 @@ extension Array where Element == Device {
 
 /// A device on which `Tensor`s can be allocated.
 public struct Device {
-  /// The device kind: GPU, GPU, TPU, or remote TPU.
+  /// The device kind: CPU, GPU, TPU, or remote TPU.
   public let kind: Kind
 
   /// The device ordinal value.
