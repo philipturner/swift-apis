@@ -20,7 +20,7 @@
 /// - Note: this workaround is necessary because `CopyableToDevice` is a protocol with `Self`
 ///   requirements, so `x as? CopyableToDevice` does not work.
 public protocol _CopyableToDevice {
-  static func _move<Root>(
+  static func `_move`<Root>(
     _ root: inout Root, _ rootKeyPath: PartialKeyPath<Root>, to: Device)
 }
 
@@ -38,7 +38,7 @@ extension CopyableToDevice {
   ///
   /// - Note: Do not ever use this API directly. This is an implementation detail to support
   ///   `KeyPathIterable.move(to:)` and `KeyPathIterable.init(copying:to:)`.
-  public static func _move<Root>(
+  public static func `_move`<Root>(
     _ root: inout Root, _ rootKeyPath: PartialKeyPath<Root>, to device: Device
   ) {
     guard let keyPath = rootKeyPath as? WritableKeyPath<Root, Self> else {
@@ -53,15 +53,15 @@ extension CopyableToDevice {
 extension _KeyPathIterableBase {
   /// Recursively copies all `CopyableToDevice`-conforming nested properties and elements in `root`
   /// to the given `Device` in-place.
-  public func _move<Root>(
+  public func `_move`<Root>(
     _ root: inout Root, _ rootKeyPath: PartialKeyPath<Root>, to device: Device
   ) {
     for kp in _allKeyPathsTypeErased {
       let joinedKeyPath = rootKeyPath.appending(path: kp)!
       if let valueType = type(of: joinedKeyPath).valueType as? _CopyableToDevice.Type {
-        valueType._move(&root, joinedKeyPath, to: device)
+        valueType.`_move`(&root, joinedKeyPath, to: device)
       } else if let value = self[keyPath: kp], let nested = value as? _KeyPathIterableBase {
-        nested._move(&root, joinedKeyPath, to: device)
+        nested.`_move`(&root, joinedKeyPath, to: device)
       }
     }
   }
@@ -71,7 +71,7 @@ extension KeyPathIterable {
   /// Recursively copies all `CopyableToDevice`-conforming nested properties and elements to the
   /// given `Device` in-place.
   public mutating func move(to device: Device) {
-    _move(&self, \.self, to: device)
+    `_move`(&self, \.self, to: device)
   }
 
   /// Creates a copy of `self` with all `CopyableToDevice`-conforming nested properties and elements
