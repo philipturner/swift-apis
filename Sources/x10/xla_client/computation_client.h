@@ -220,6 +220,11 @@ class ComputationClient {
     std::vector<Output> outputs;
     std::vector<Input> inputs;
   };
+  
+  struct MemoryInfo {
+    int64_t kb_free = 0;
+    int64_t kb_total = 0;
+  };
 
   static std::unique_ptr<ComputationClient> Create();
 
@@ -245,14 +250,19 @@ class ComputationClient {
 
   Device* GetDevice(const std::string& device_name) const;
 
-  static void SetReplicationDevices(std::vector<std::string> devices);
+  virtual void SetReplicationDevices(
+      std::shared_ptr<std::vector<std::string>> devices) = 0;
 
-  static const std::vector<std::string>& GetReplicationDevices();
+  virtual std::shared_ptr<std::vector<std::string>> GetReplicationDevices() = 0;
 
   virtual void SetRngSeed(size_t seed) = 0;
 
   virtual std::map<std::string, Metric> GetMetrics() const = 0;
   static std::map<std::string, Metric> ReadMetrics();
+
+  virtual MemoryInfo GetMemoryInfo(const std::string& device) = 0;
+
+  virtual void PrepareToExit() = 0;
 
   // Utility API around the vector based Compile() API to compile a single
   // computation.
@@ -265,14 +275,21 @@ class ComputationClient {
   // Compile() API. If the devices array is empty, a vector with the single
   // device will be returned. Otherwise a vector with the devices content will
   // be returned.
-  static std::vector<std::string> GetCompilationDevices(
+  std::vector<std::string> GetCompilationDevices(
       const std::string& device, absl::Span<const std::string> devices);
+
+  // Run the XRT local service, this will block the caller unitl the server
+  // being stopped.
+  static void RunLocalService(uint64_t service_port);
 
   // Retrieves the ordinal number out of a device string. This is the number
   // after the last ':' character of the device string.
   static int64_t GetDeviceOrdinal(const std::string& device);
+  
+  // Returns the ComputationClient singleton.
+  static ComputationClient* Get();
 
-  // Metrics common to all client intrfaces.
+  // Metrics common to all client interfaces.
   static metrics::Metric* TransferToServerMetric();
   static metrics::Metric* TransferToServerTransformMetric();
   static metrics::Metric* TransferFromServerMetric();
@@ -296,8 +313,7 @@ class ComputationClient {
  protected:
   void AddDevice(std::unique_ptr<Device> device);
 
-  // Returns the ComputationClient singleton.
-  static ComputationClient* Get();
+  static ComputationClient* GetIfInitialized();
 
  private:
   std::vector<Device*> devices_;

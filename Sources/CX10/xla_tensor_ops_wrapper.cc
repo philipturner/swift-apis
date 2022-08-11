@@ -198,9 +198,11 @@ xla::XlaOp LowerMean(xla::XlaOp input,
 
 xla::XlaOp LowerLogicalCast(xla::XlaOp input, at::ScalarType dtype) {
   const xla::Shape& input_shape = XlaHelpers::ShapeOfXlaOp(input);
-  return ConvertToRaw(input, input_shape.element_type(),
-                      MakeXlaPrimitiveType(dtype, /*device=*/nullptr),
-                      TensorTypeToRawXlaType(dtype), /*device=*/nullptr);
+  xla::PrimitiveType raw_from = input_shape.element_type();
+  xla::PrimitiveType type_ = MakeXlaPrimitiveType(dtype, /*device=*/nullptr);
+  xla::PrimitiveType raw_to = TensorTypeToRawXlaType(dtype);
+  return ConvertToRaw(input, input_shape.element_type(), raw_from, type_,
+                      raw_to, /*device=*/nullptr);
 }
 xla::Shape ShapeLogicalCast(const Value& input, at::ScalarType dtype) {
   xla::Shape result = input.shape();

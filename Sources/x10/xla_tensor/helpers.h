@@ -255,7 +255,8 @@ class XlaHelpers {
   static std::vector<typename Container::value_type> Permute(
       absl::Span<const int64_t> permutation, const Container& input) {
     using T = typename Container::value_type;
-    XLA_CHECK(xla::IsPermutation(permutation, input.size()))
+    XLA_CHECK(input.size() == permutation.size() &&
+              xla::IsPermutation(permutation))
         << "Invalid permutation specified";
     std::vector<T> output(input.size());
     for (size_t i = 0; i < permutation.size(); ++i) {

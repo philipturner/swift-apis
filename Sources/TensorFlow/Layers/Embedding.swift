@@ -59,7 +59,14 @@ public struct Embedding<Scalar: TensorFlowFloatingPoint>: Module {
   ///   - input: The indices that will be mapped to their vector representations.
   /// - Returns: The tensor created by replacing input indices with their vector representations.
   @differentiable(reverse, wrt: self)
-  public func callAsFunction(_ input: Tensor<Int32>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Int32>) -> Tensor<Scalar> {
     embeddings.gathering(atIndices: input)
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }

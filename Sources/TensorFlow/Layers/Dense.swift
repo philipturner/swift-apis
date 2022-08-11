@@ -70,12 +70,19 @@ public struct Dense<Scalar: TensorFlowFloatingPoint>: Layer {
   /// - Parameter input: The input to the layer.
   /// - Returns: The output.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     if batched {
       let hidden = matmul(input.expandingShape(at: 1), weight).squeezingShape(at: 1)
       return activation(useBias ? hidden + bias : hidden)
     }
     return activation(useBias ? (matmul(input, weight) + bias) : matmul(input, weight))
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 

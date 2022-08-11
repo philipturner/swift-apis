@@ -209,6 +209,8 @@ public final class _ExecutionContext {
 
     // Suppress TensorFlow logging, unless the user specified a log level.
     setenv("TF_CPP_MIN_LOG_LEVEL", "3", /*override*/ 0)
+    setenv("GRPC_VERBOSITY", "ERROR", /*override*/ 0)
+    setenv("ALLOW_MULTIPLE_LIBTPU_LOAD", "1", /*override*/ 0)
 
     debugLog("Initializing global context.")
 

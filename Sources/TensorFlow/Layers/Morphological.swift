@@ -70,7 +70,7 @@ public struct Dilation2D<Scalar: TensorFlowFloatingPoint>: Layer {
   ///
   /// - Note: Padding size equals zero when using `.valid`.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let dilated = dilation2D(
       input,
       filter: filter,
@@ -79,6 +79,13 @@ public struct Dilation2D<Scalar: TensorFlowFloatingPoint>: Layer {
       padding: padding)
 
     return dilated
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -140,7 +147,7 @@ public struct Erosion2D<Scalar: TensorFlowFloatingPoint>: Layer {
   ///
   /// - Note: Padding size equals zero when using `.valid`.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let eroded = erosion2D(
       input,
       filter: filter,
@@ -149,5 +156,12 @@ public struct Erosion2D<Scalar: TensorFlowFloatingPoint>: Layer {
       padding: padding)
 
     return eroded
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }

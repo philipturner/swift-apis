@@ -15,8 +15,6 @@
 import TensorFlow
 import XCTest
 
-// (s4tf/s4tf#14) Fails at runtime.
-#if false
 final class AnnotationXLATests: XCTestCase {
   public struct SummaryNet: Layer {
     public var dense1 = Dense<Float>(inputSize: 1, outputSize: 1)
@@ -77,4 +75,3 @@ final class AnnotationXLATests: XCTestCase {
     XCTAssert(validateAnnotations(annotations))
   }
 }
-#endif

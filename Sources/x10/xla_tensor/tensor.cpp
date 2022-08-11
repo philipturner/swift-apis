@@ -50,6 +50,7 @@
 #include "tensorflow/compiler/xla/literal_util.h"
 #include "tensorflow/compiler/xla/shape_util.h"
 #include "tensorflow/core/lib/core/errors.h"
+#include "tensorflow/core/profiler/lib/traceme.h"
 
 namespace swift_xla {
 namespace ir {
@@ -393,7 +394,7 @@ class XLATensor::DeviceContextArena {
     ForAllDeviceContexts(fn, device);
   }
 
-  void StepRngSeed(const Device* device) {
+  void MarkStep(const Device* device) {
     auto fn = [&](DeviceContext* devctx) {
       std::lock_guard<std::mutex> lock(devctx->lock);
       devctx->seed = 1012031 + devctx->seed * 7012063;
@@ -544,6 +545,10 @@ at::ScalarType XLATensor::dtype() const {
 
 at::ScalarType XLATensor::physical_scalar_type() const {
   return TensorTypeFromXlaType(shape().get().element_type());
+}
+
+c10::optional<at::ScalarType> XLATensor::dtype_optional() const {
+  return data()->logical_element_type;
 }
 
 xla::util::MaybeRef<xla::Shape> XLATensor::shape() const {
@@ -829,6 +834,23 @@ std::vector<xla::ComputationClient::DataPtr> XLATensor::GatherTensorsXlaData(
   return result_tensors_data;
 }
 
+void XLATensor::TensorCollectionBarrier(SyncTensorCollection* coll) {
+  static const std::string invalid_device(
+      "Unknown0"); /* Temp solution to identify unassigned devices */
+  if (coll->device.ToString().compare(invalid_device) == 0 ||
+      coll->unlocker.size() > 0) {
+    return;
+  }
+  TF_VLOG(4) << "Waiting on device barrier for device " << coll->device
+             << " ...";
+  {
+    XLA_TIMED("DeviceLockWait");
+    coll->unlocker = LockDevices({coll->device});
+  }
+  TF_VLOG(4) << "Waiting on device barrier for device " << coll->device
+             << " done!";
+}
+
 std::vector<at::Tensor> XLATensor::GetTensorsOpByOp(
     std::vector<XLATensor>* tensors) {
   SyncTensorsConfig config;
@@ -840,6 +862,7 @@ std::vector<at::Tensor> XLATensor::GetTensorsOpByOp(
                                     &coll.indices);
 
     std::vector<ir::Value> roots = CollectRoots(*tensors, coll.indices);
+    TensorCollectionBarrier(&coll);
     async_tensors_data =
         OpByOpExecutor::Get()->Execute(roots, coll.device.ToString(), {});
   }
@@ -944,32 +967,51 @@ XLATensor XLATensor::CopyTensorToDevice(const Device& device) {
   return Create(ToTensor(/*detached=*/true), device);
 }
 
+ir::Value XLATensor::MaybeCastIrValue(
+    ir::Value ir_value, const Device& device,
+    c10::optional<at::ScalarType> logical_element_type) const {
+  if (!logical_element_type) {
+    logical_element_type = dtype_optional();
+  }
+  if (logical_element_type &&
+      RequiresRawTypeCasting(*logical_element_type, &device)) {
+    ir_value = ir::MakeNode<ir::ops::Cast>(ir_value, *logical_element_type);
+  }
+  return ir_value;
+}
+
 XLATensor XLATensor::CreateFrom(ir::Value ir_value) const {
-  return Create(std::move(ir_value), GetDevice(), dtype());
+  ir_value = MaybeCastIrValue(std::move(ir_value), GetDevice(),
+                              /*logical_element_type=*/absl::nullopt);
+  return Create(std::move(ir_value), GetDevice(), dtype_optional());
 }
 
 XLATensor XLATensor::CreateFrom(ir::Value ir_value,
                                 const Device& device) const {
-  return Create(std::move(ir_value), device, dtype());
+  ir_value = MaybeCastIrValue(std::move(ir_value), device,
+                              /*logical_element_type=*/absl::nullopt);
+  return Create(std::move(ir_value), device, dtype_optional());
 }
 
 XLATensor XLATensor::CreateFrom(ir::Value ir_value,
                                 at::ScalarType logical_element_type) const {
+  ir_value =
+      MaybeCastIrValue(std::move(ir_value), GetDevice(), logical_element_type);
   return Create(std::move(ir_value), GetDevice(), logical_element_type);
 }
 
 XLATensor XLATensor::CreateFrom(
     ir::Value ir_value,
     c10::optional<at::ScalarType> logical_element_type_opt) const {
-  if (logical_element_type_opt) {
-    return CreateFrom(ir_value, *logical_element_type_opt);
-  } else {
-    return CreateFrom(ir_value);
-  }
+  ir_value = MaybeCastIrValue(std::move(ir_value), GetDevice(),
+                              logical_element_type_opt);
+  return Create(std::move(ir_value), GetDevice(), logical_element_type_opt);
 }
 
 XLATensor XLATensor::CreateFrom(ir::Value ir_value, const Device& device,
                                 at::ScalarType logical_element_type) const {
+  ir_value =
+      MaybeCastIrValue(std::move(ir_value), device, logical_element_type);
   return Create(std::move(ir_value), device, logical_element_type);
 }
 
@@ -985,6 +1027,8 @@ void XLATensor::ApplyPendingGraph() {
 
 XLATensor::SyncTensorCollection XLATensor::CollectSyncTensors(
     const std::vector<XLATensor>& tensors, const SyncTensorsConfig& config) {
+  tensorflow::profiler::TraceMe activity(
+      "CollectSyncTensors", tensorflow::profiler::TraceMeLevel::kInfo);
   xla::util::Unique<Device> unique_device;
   for (size_t i = 0; i < tensors.size(); ++i) {
     unique_device.set(tensors[i].GetDevice());
@@ -1002,14 +1046,6 @@ XLATensor::SyncTensorCollection XLATensor::CollectSyncTensors(
   coll.config = config;
   coll.device = *unique_device;
   coll.indices.reserve(tensors.size());
-  TF_VLOG(4) << "Waiting on device barrier for device " << coll.device
-             << " ...";
-  {
-    XLA_TIMED("DeviceLockWait");
-    coll.unlocker = LockDevices(unique_device.AsSet());
-  }
-  TF_VLOG(4) << "Waiting on device barrier for device " << coll.device
-             << " done!";
   for (size_t i = 0; i < tensors.size(); ++i) {
     if (tensors[i].CurrentXlaData() == nullptr) {
       ir::Value ir_value = tensors[i].CurrentIrValue();
@@ -1092,7 +1128,10 @@ XLATensor::ComputationCache* XLATensor::GetComputationCache() {
 }
 
 XLATensor::PostOrderData XLATensor::RunPostOrder(
-    const std::vector<XLATensor>& tensors, absl::Span<const size_t> indices) {
+    const std::vector<XLATensor>& tensors, SyncTensorCollection *coll) {
+  tensorflow::profiler::TraceMe activity(
+      "RunPostOrder", tensorflow::profiler::TraceMeLevel::kInfo);
+  absl::Span<const size_t> indices = coll->indices;
   std::vector<const ir::Node*> roots;
   roots.reserve(indices.size());
   for (auto index : indices) {
@@ -1103,9 +1142,15 @@ XLATensor::PostOrderData XLATensor::RunPostOrder(
   po_data.post_order = ir::Util::ComputePostOrder(roots, &po_data.emission_map);
   absl::node_hash_map<xla::ComputationClient::Data::OpaqueHandle, size_t>
       data_handles;
+
   for (auto node : po_data.post_order) {
     const ir::ops::DeviceData* device_data = ir::ops::DeviceData::Cast(node);
     if (device_data != nullptr) {
+      /* Acceptable race condition: HasValue may return false. This is OK
+       * since the conditional barrier is a performance optimization. */
+      if (!device_data->data()->HasValue()) {
+        TensorCollectionBarrier(coll);
+      }
       xla::ComputationClient::Data::OpaqueHandle handle =
           device_data->data()->GetOpaqueHandle();
       auto it = data_handles.find(handle);
@@ -1166,6 +1211,9 @@ std::shared_ptr<XLATensor::Async> XLATensor::ScheduleSyncTensorsGraph(
     std::vector<xla::ComputationClient::DataPtr> parameters_data,
     std::vector<xla::ComputationClient::DataPtr> tensors_data,
     ComputationCache::TypePtr cached_computation) {
+  tensorflow::profiler::TraceMe activity(
+      "ScheduleSyncTensorsGraph", tensorflow::profiler::TraceMeLevel::kInfo);
+  TensorCollectionBarrier(coll);
   std::shared_ptr<Async> async = std::make_shared<Async>(
       coll, std::move(parameters_data), std::move(tensors_data),
       std::move(cached_computation));
@@ -1224,6 +1272,8 @@ std::shared_ptr<XLATensor::Async> XLATensor::ScheduleSyncTensorsGraph(
 void XLATensor::SyncTensorsGraph(std::vector<XLATensor>* tensors,
                                  absl::Span<const std::string> devices,
                                  bool wait, bool sync_xla_data) {
+  tensorflow::profiler::TraceMe activity(
+        "SyncTensorsGraph", tensorflow::profiler::TraceMeLevel::kInfo);
   static const bool op_by_op =
       xla::sys_util::GetEnvBool("XLA_SYNC_TENSORS_OPBYOP", false);
   SyncTensorsConfig config;
@@ -1244,6 +1294,8 @@ void XLATensor::SyncTensorsGraph(std::vector<XLATensor>* tensors,
 void XLATensor::SyncLiveTensorsGraph(const Device* device,
                                      absl::Span<const std::string> devices,
                                      bool wait) {
+  tensorflow::profiler::TraceMe activity(
+        "SyncLiveTensorsGraph", tensorflow::profiler::TraceMeLevel::kInfo);
   auto tensors = GetLiveTensors(device);
   if (tensors.empty()) {
     return;
@@ -1255,7 +1307,7 @@ void XLATensor::SyncLiveTensorsGraph(const Device* device,
 
 void XLATensor::MarkStep(const Device* device) {
   XLA_COUNTER("MarkStep", 1);
-  DeviceContextArena::Get()->StepRngSeed(device);
+  DeviceContextArena::Get()->MarkStep(device);
   ir::ScopePusher::ResetScopes();
   g_tls_data.Reset();
 }
@@ -1285,11 +1337,11 @@ XLATensor::OpByOpAsync XLATensor::SyncTensorsGraphOpByOp(
 
   std::vector<ir::Value> roots = CollectRoots(*tensors, coll.indices);
   auto tensors_data = FetchTensorData(tensors, coll.config, coll.indices);
+  TensorCollectionBarrier(&coll);
   auto async = std::make_shared<Async>(std::move(coll), std::move(tensors_data),
                                        std::move(roots), devices);
 
-  auto syncfn = [async]() -> xla::Status {
-    xla::Status status;
+  auto syncfn = [async]() -> int {
     try {
       TF_VLOG(3) << "Executing (OpByOp) IR graph hash "
                  << xla::util::HexHash(async->coll.hash) << " on device "
@@ -1312,7 +1364,7 @@ XLATensor::OpByOpAsync XLATensor::SyncTensorsGraphOpByOp(
         unlocker.SetStatus(exptr);
       }
     }
-    return status;
+    return 0;
   };
   OpByOpAsync async_op(std::move(syncfn));
   return async_op.Schedule();
@@ -1411,7 +1463,7 @@ XLATensor::CompilationResult XLATensor::Compile(
   std::vector<std::shared_ptr<xla::ComputationClient::Computation>>
       computations =
           xla::GetX10Device(coll.device.ToString())
-              ->Compile(xla::ComputationClient::GetCompilationDevices(
+              ->Compile(xla::ComputationClient::Get()->GetCompilationDevices(
                             coll.device.ToString(), devices),
                         std::move(instances));
   TF_VLOG(3) << "Compiling IR graph hash " << xla::util::HexHash(coll.hash)
@@ -1433,14 +1485,19 @@ XLATensor::CompilationResult XLATensor::Compile(
 std::shared_ptr<XLATensor::Async> XLATensor::SyncTensorsGraphInternal(
     std::vector<XLATensor>* tensors, absl::Span<const std::string> devices,
     const SyncTensorsConfig& config) {
+  tensorflow::profiler::TraceMe activity(
+      "SyncTensorsGraphInternal", tensorflow::profiler::TraceMeLevel::kInfo);
   SyncTensorCollection coll = CollectSyncTensors(*tensors, config);
   if (coll.indices.empty()) {
+    /* Enure previous execution is complete before exiting this
+     * function */
+    TensorCollectionBarrier(&coll);
     return nullptr;
   }
+  PostOrderData po_data = RunPostOrder(*tensors, &coll);
   DebugUtil::SaveTensorsGraphInfo("ScheduleSyncTensorsGraph", *tensors,
                                   &coll.indices);
 
-  PostOrderData po_data = RunPostOrder(*tensors, coll.indices);
   InsertTraceletCutpoint(po_data);
   coll.hash = xla::util::HashCombine(
       coll.hash, xla::util::Hash(po_data.parameter_sequence));

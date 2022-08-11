@@ -34,6 +34,7 @@
 #include "tensorflow/compiler/xla/xla_client/metrics.h"
 #include "tensorflow/compiler/xla/xla_client/triggered_task.h"
 #include "tensorflow/compiler/xla/xla_client/util.h"
+#include "tensorflow/compiler/xla/xla_client/xrt_local_service.h"
 #include "tensorflow/compiler/xla/xla_client/xrt_session.h"
 #include "tensorflow/compiler/xla/xla_client/xrt_session_cache.h"
 #include "tensorflow/cc/client/client_session.h"
@@ -50,6 +51,49 @@
 
 namespace xla {
 
+class XrtLocker {
+ public:
+  void Lock() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    cv_.wait(lock, [this] { return !locked_; });
+    CheckResetException();
+    locked_ = true;
+  }
+
+  void Unlock(std::exception_ptr exptr) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    locked_ = false;
+    exptr_ = std::move(exptr);
+    cv_.notify_all();
+  }
+
+  void Barrier() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    cv_.wait(lock, [this] { return !locked_; });
+    cv_.notify_all();
+    CheckResetException();
+  }
+
+ private:
+  void CheckResetException() {
+    std::exception_ptr exptr = std::move(exptr_);
+    exptr_ = nullptr;
+    if (exptr != nullptr) {
+      std::rethrow_exception(exptr);
+    }
+  }
+
+  std::mutex mutex_;
+  std::condition_variable cv_;
+  bool locked_ = false;
+  std::exception_ptr exptr_;
+};
+
+class DataHandleLocker : public XrtLocker {
+ public:
+  static const int64_t dummy_handle = -151235;
+};
+
 class XrtComputationClient : public ComputationClient,
                              public ComputationClient::TransferManager {
   struct DeviceHandle {
@@ -59,24 +103,76 @@ class XrtComputationClient : public ComputationClient,
 
   class XrtDevice;
 
-  struct XrtHandle {
-    XrtHandle(int64_t handle, std::function<void()> releaser)
-        : handle(handle), releaser(std::move(releaser)) {}
+  class XrtHandle {
+   public:
+    XrtHandle(int64_t handle, std::function<void(int64_t)> releaser,
+              bool async = false)
+        : handle_(handle), releaser(std::move(releaser)) {
+      if (async) {
+        locker = std::make_shared<DataHandleLocker>();
+      } else {
+        locker = nullptr;
+      }
+    }
 
-    ~XrtHandle() { releaser(); }
+    ~XrtHandle() {
+      // Handle might only contain dummy value, need to wait for the
+      // true handle assigniment.
+      if (locker) {
+        XLA_TIMED("HandleBarrierWait");
+        locker->Barrier();
+      }
+      releaser(handle_);
+    }
 
-    int64_t handle;
-    std::function<void()> releaser;
+    // Lock the current XrtHandle and prevent other caller from accessing the
+    // handle_ value. This function will return an ExceptionCleanup object which
+    // will rethrow the exception if there is one and unlock the XrtHandle upon
+    // destruction.
+    xla::util::ExceptionCleanup LockHandle() {
+      std::shared_ptr<DataHandleLocker> locker_copy = this->locker;
+      locker_copy->Lock();
+      return xla::util::ExceptionCleanup(
+          [locker_copy = std::move(locker_copy)](
+              xla::util::ExceptionCleanup::StatusType status) {
+            locker_copy->Unlock(std::move(status));
+          });
+    }
+
+    void update_handle(int64_t handle) {
+      // handle can only be updated once when it is dummy.
+      XLA_CHECK_EQ(handle_, DataHandleLocker::dummy_handle);
+      handle_ = handle;
+    }
+
+    int64_t handle() {
+      // Handle might only contain dummy value, need to wait for the
+      // true handle assigniment
+      if (locker) {
+        XLA_TIMED("HandleBarrierWait");
+        locker->Barrier();
+      }
+      return handle_;
+      ;
+    }
+
+   private:
+    int64_t handle_;
+    std::shared_ptr<DataHandleLocker> locker;
+    std::function<void(int64_t)> releaser;
   };
 
   using XrtHandlePtr = std::shared_ptr<XrtHandle>;
 
   struct XrtData : public Data {
     XrtData(Device* device, Shape device_shape)
-        : Data(device, std::move(device_shape)) {}
+        : Data(device, std::move(device_shape)),
+          handle_ptr(nullptr) {}
     XrtData(XrtDevice* device, Shape device_shape, int64_t handle);
 
-    int64_t get_handle() const { return handle_ptr->handle; }
+    XrtData(XrtDevice* device, Shape device_shape, XrtHandlePtr handle);
+
+    int64_t get_handle() const { return handle_ptr->handle(); }
 
     OpaqueHandle GetOpaqueHandle() override { return get_handle(); }
 
@@ -94,12 +190,12 @@ class XrtComputationClient : public ComputationClient,
         : Computation(std::move(computation), std::move(program_shape),
                       std::move(devices)),
           handle_ptr(std::make_shared<XrtHandle>(
-              handle, [self, compilation_device = std::move(compilation_device),
-                       handle]() {
+              handle, [self, compilation_device = std::move(
+                                 compilation_device)](int64_t handle) {
                 self->ReleaseXrtComputation(compilation_device, handle);
               })) {}
 
-    int64_t get_handle() const { return handle_ptr->handle; }
+    int64_t get_handle() const { return handle_ptr->handle(); }
 
     XrtHandlePtr handle_ptr;
   };
@@ -191,9 +287,18 @@ class XrtComputationClient : public ComputationClient,
 
   std::vector<std::string> GetLocalDevices() const;
 
+  void SetReplicationDevices(
+      std::shared_ptr<std::vector<std::string>> devices) override;
+
+  std::shared_ptr<std::vector<std::string>> GetReplicationDevices() override;
+
   void SetRngSeed(size_t seed) override;
 
   std::map<std::string, Metric> GetMetrics() const override;
+
+  MemoryInfo GetMemoryInfo(const std::string& device) override;
+
+  void PrepareToExit() override;
 
   static Worker ParseWorker(const std::string& worker);
 
@@ -246,8 +351,6 @@ class XrtComputationClient : public ComputationClient,
   XrtSession* GetSessionForDevice(XrtSessionCache* cache,
                                   const std::string& device,
                                   XrtSessionCache::SessionMap* session_map);
-
-  std::string GetEffectiveDevice(const std::string& device) const;
 
   const std::string& SwiftDeviceToXrtDevice(const std::string& device) const;
 
@@ -320,6 +423,9 @@ class XrtComputationClient : public ComputationClient,
 
   void InitializeDevices(
       std::unique_ptr<tensorflow::tpu::TopologyProto> topology_proto);
+
+  service::grpc::Config CreateMeshServiceConfig(
+      const tensorflow::tpu::TopologyProto* topology_proto) const;
 
   void CreateMeshService(const std::string& address,
                          const tensorflow::tpu::TopologyProto* topology_proto);
@@ -447,6 +553,13 @@ class XrtComputationClient : public ComputationClient,
       XrtSession* session, const tensorflow::Scope& scope,
       const std::string& device) const;
 
+  // Creates an XRTMemoryInfo node:
+  //
+  //  XRTMemoryInfo()
+  const XrtSession::CachedNode& GetMemoryInfoNode(
+      XrtSession* session, const tensorflow::Scope& scope,
+      const std::string& device) const;
+
   // Checks the result of a compile operation, and dumps the XLA computation
   // graphs in case of error.
   static void CheckCompileStatus(const Status& status,
@@ -480,7 +593,7 @@ class XrtComputationClient : public ComputationClient,
   static std::string GetLocalTarget(const Options& options);
 
   // Checks whether a local GRPC service is required, and starts it if need it.
-  static void MaybeCreateLocalService(const Options& options);
+  void MaybeCreateLocalService(const Options& options);
 
   Options options_;
   std::mutex lock_;
@@ -488,6 +601,7 @@ class XrtComputationClient : public ComputationClient,
   std::unique_ptr<XrtSessionCache> session_cache_;
   std::unique_ptr<XrtSessionCache> alloc_session_cache_;
   std::unique_ptr<util::TriggeredTask> triggered_task_;
+  XrtLocalService* local_service_ = nullptr;
   util::Cache<CompilationCacheKey, Computation, CompilationCacheKey::Hash>
       compilation_cache_;
   std::atomic<size_t> rng_seed_;
@@ -498,6 +612,7 @@ class XrtComputationClient : public ComputationClient,
   // The mesh service which is used to coordinate all the client hosts which are
   // feeding different TPU devices in a POD (or slice) training.
   std::unique_ptr<service::MeshService> mesh_service_;
+  std::shared_ptr<std::vector<std::string>> replication_devices_;
 };
 
 }  // namespace xla

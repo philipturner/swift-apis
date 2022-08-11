@@ -27,10 +27,26 @@
 #include "tensorflow/compiler/xla/xla_client/debug_macros.h"
 #include "tensorflow/compiler/xla/xla_client/mesh_service.h"
 #include "tensorflow/compiler/xla/xla_client/sys_util.h"
+#include "tensorflow/compiler/xla/xla_client/xrt_local_service.h"
 #include "tensorflow/compiler/xla/status_macros.h"
+#include "tensorflow/core/platform/stacktrace_handler.h"
 #include "tensorflow/core/util/device_name_utils.h"
 
 namespace xla {
+namespace {
+
+std::atomic<ComputationClient*> g_computation_client(nullptr);
+std::once_flag g_computation_client_once;
+
+ComputationClient* CreateClient() {
+  if (sys_util::GetEnvBool("XLA_DUMP_FATAL_STACK", false)) {
+    tensorflow::testing::InstallStacktraceHandler();
+  }
+  auto client = ComputationClient::Create();
+  return client.release();
+}
+
+}
 
 std::shared_ptr<ComputationClient::Computation> ComputationClient::Compile(
     XlaComputation computation, std::string compilation_device,
@@ -46,12 +62,34 @@ std::vector<std::string> ComputationClient::GetCompilationDevices(
     const std::string& device, absl::Span<const std::string> devices) {
   std::vector<std::string> compilation_devices;
   if (devices.empty()) {
-    compilation_devices.push_back(device);
+    auto replication_devices = GetReplicationDevices();
+    if (replication_devices == nullptr || replication_devices->empty()) {
+      compilation_devices.push_back(device);
+    } else {
+      compilation_devices = *replication_devices;
+    }
   } else {
     compilation_devices.insert(compilation_devices.end(), devices.begin(),
                                devices.end());
   }
   return compilation_devices;
+}
+
+void ComputationClient::RunLocalService(uint64_t service_port) {
+  try {
+    XrtLocalService* service = new XrtLocalService(
+        "localservice|localhost:" + std::to_string(service_port),
+        "localservice", 0);
+    service->Start();
+    service->Join();
+  } catch (const std::runtime_error& error) {
+    if (std::string(error.what()).find("Couldn't open device: /dev/accel0") !=
+        std::string::npos) {
+      TF_LOG(INFO) << "Local service has been created by other process, return";
+    } else {
+      throw;
+    }
+  }
 }
 
 int64_t ComputationClient::GetDeviceOrdinal(const std::string& device) {
@@ -61,9 +99,13 @@ int64_t ComputationClient::GetDeviceOrdinal(const std::string& device) {
 }
 
 ComputationClient* ComputationClient::Get() {
-  static ComputationClient* computation_client =
-      ComputationClient::Create().release();
-  return computation_client;
+  std::call_once(g_computation_client_once,
+                 [&]() { g_computation_client = CreateClient(); });
+  return g_computation_client.load();
+}
+
+ComputationClient* ComputationClient::GetIfInitialized() {
+  return g_computation_client.load();
 }
 
 metrics::Metric* ComputationClient::TransferToServerMetric() {
@@ -242,17 +284,6 @@ std::map<std::string, Metric> ComputationClient::ReadMetrics() {
 ComputationClient::Device* ComputationClient::DefaultDevice() {
   auto* client = Get();
   return client->GetDevice(client->GetDefaultDevice());
-}
-
-thread_local std::vector<std::string> g_replication_devices;  // NOLINT
-
-void ComputationClient::SetReplicationDevices(
-    std::vector<std::string> devices) {
-  g_replication_devices = std::move(devices);
-}
-
-const std::vector<std::string>& ComputationClient::GetReplicationDevices() {
-  return g_replication_devices;
 }
 
 swift_xla::Device ComputationClient::DefaultDeviceStruct() {

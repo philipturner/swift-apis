@@ -84,7 +84,7 @@ public struct Conv1D<Scalar: TensorFlowFloatingPoint>: Layer {
   ///
   /// - Note: Padding size equals zero when using `.valid`.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let conv = conv1D(
       input,
       filter: filter,
@@ -92,6 +92,13 @@ public struct Conv1D<Scalar: TensorFlowFloatingPoint>: Layer {
       padding: padding,
       dilation: dilation)
     return activation(useBias ? (conv + bias) : conv)
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -206,7 +213,7 @@ public struct Conv2D<Scalar: TensorFlowFloatingPoint>: Layer {
   ///
   /// - Note: Padding size equals zero when using `.valid`.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let conv = conv2D(
       input,
       filter: filter,
@@ -214,6 +221,13 @@ public struct Conv2D<Scalar: TensorFlowFloatingPoint>: Layer {
       padding: padding,
       dilations: (1, dilations.0, dilations.1, 1))
     return activation(useBias ? (conv + bias) : conv)
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -337,7 +351,7 @@ public struct Conv3D<Scalar: TensorFlowFloatingPoint>: Layer {
   ///
   /// - Note: Padding size equals zero when using `.valid`.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let conv = conv3D(
       input,
       filter: filter,
@@ -345,6 +359,13 @@ public struct Conv3D<Scalar: TensorFlowFloatingPoint>: Layer {
       padding: padding,
       dilations: (1, dilations.0, dilations.1, dilations.2, 1))
     return activation(useBias ? (conv + bias) : conv)
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -441,7 +462,7 @@ public struct TransposedConv1D<Scalar: TensorFlowFloatingPoint>: Layer {
   /// - Parameter input: The input to the layer.
   /// - Returns: The output.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let batchSize = input.shape[0]
     let w = (input.shape[1] - (1 * paddingIndex)) * stride + (filter.shape[0] * paddingIndex)
     let c = filter.shape[2]
@@ -453,6 +474,13 @@ public struct TransposedConv1D<Scalar: TensorFlowFloatingPoint>: Layer {
       strides: (1, 1, stride, 1),
       padding: padding)
     return activation(useBias ? (conv + bias) : conv)
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -543,7 +571,7 @@ public struct TransposedConv2D<Scalar: TensorFlowFloatingPoint>: Layer {
   /// - Parameter input: The input to the layer.
   /// - Returns: The output.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let batchSize = input.shape[0]
     let h = (input.shape[1] - (1 * paddingIndex)) * strides.0 + (filter.shape[0] * paddingIndex)
     let w = (input.shape[2] - (1 * paddingIndex)) * strides.1 + (filter.shape[1] * paddingIndex)
@@ -556,6 +584,13 @@ public struct TransposedConv2D<Scalar: TensorFlowFloatingPoint>: Layer {
       strides: (1, strides.0, strides.1, 1),
       padding: padding)
     return activation(useBias ? (conv + bias) : conv)
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -646,7 +681,7 @@ public struct TransposedConv3D<Scalar: TensorFlowFloatingPoint>: Layer {
   /// - Parameter input: The input to the layer.
   /// - Returns: The output.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let batchSize = input.shape[0]
     let w = (input.shape[1] - (1 * paddingIndex)) * strides.0 + (filter.shape[0] * paddingIndex)
     let h = (input.shape[2] - (1 * paddingIndex)) * strides.1 + (filter.shape[1] * paddingIndex)
@@ -661,6 +696,13 @@ public struct TransposedConv3D<Scalar: TensorFlowFloatingPoint>: Layer {
       strides: (1, strides.0, strides.1, strides.2, 1),
       padding: padding)
     return activation(useBias ? (conv + bias) : conv)
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -754,7 +796,7 @@ public struct DepthwiseConv2D<Scalar: TensorFlowFloatingPoint>: Layer {
   /// - Returns: The output of shape,
   ///   [batch count, output height, output width, input channel count * channel multiplier]
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let conv = depthwiseConv2D(
       input,
       filter: filter,
@@ -762,6 +804,13 @@ public struct DepthwiseConv2D<Scalar: TensorFlowFloatingPoint>: Layer {
       padding: padding,
       dilations: (1, dilations.0, dilations.1, 1))
     return activation(useBias ? (conv + bias) : conv)
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -828,8 +877,15 @@ public struct ZeroPadding1D<Scalar: TensorFlowFloatingPoint>: ParameterlessLayer
   /// - Parameter input: The input to the layer.
   /// - Returns: The output.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     input.padded(forSizes: [(0, 0), padding, (0, 0)])
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -862,8 +918,15 @@ public struct ZeroPadding2D<Scalar: TensorFlowFloatingPoint>: ParameterlessLayer
   /// - Parameter input: The input to the layer.
   /// - Returns: The output.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     input.padded(forSizes: [(0, 0), padding.0, padding.1, (0, 0)])
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -896,8 +959,15 @@ public struct ZeroPadding3D<Scalar: TensorFlowFloatingPoint>: ParameterlessLayer
   /// - Parameter input: The input to the layer.
   /// - Returns: The output.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     input.padded(forSizes: [(0, 0), padding.0, padding.1, padding.2, (0, 0)])
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -965,7 +1035,7 @@ public struct SeparableConv1D<Scalar: TensorFlowFloatingPoint>: Layer {
   /// - Parameter input: The input to the layer.
   /// - Returns: The output.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let depthwise = depthwiseConv2D(
       input.expandingShape(at: 1),
       filter: depthwiseFilter.expandingShape(at: 1),
@@ -979,6 +1049,13 @@ public struct SeparableConv1D<Scalar: TensorFlowFloatingPoint>: Layer {
       padding: padding,
       dilations: (1, 1, 1, 1))
     return activation(useBias ? (x.squeezingShape(at: 1) + bias) : x.squeezingShape(at: 1))
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -1087,7 +1164,7 @@ public struct SeparableConv2D<Scalar: TensorFlowFloatingPoint>: Layer {
   /// - Parameter input: The input to the layer.
   /// - Returns: The output.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let depthwise = depthwiseConv2D(
       input,
       filter: depthwiseFilter,
@@ -1101,6 +1178,13 @@ public struct SeparableConv2D<Scalar: TensorFlowFloatingPoint>: Layer {
       padding: padding,
       dilations: (1, 1, 1, 1))
     return activation(useBias ? (conv + bias) : conv)
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 

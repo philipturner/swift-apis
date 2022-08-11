@@ -33,10 +33,17 @@ public struct Flatten<Scalar: TensorFlowFloatingPoint>: ParameterlessLayer {
   /// - Parameter input: The input to the layer.
   /// - Returns: The output.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     let batchSize = input.shape[0]
     let remaining = input.shape[1..<input.rank].contiguousSize
     return input.reshaped(to: [batchSize, remaining])
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 
@@ -71,8 +78,15 @@ public struct Reshape<Scalar: TensorFlowFloatingPoint>: ParameterlessLayer {
   /// - Parameter input: The input to the layer.
   /// - Returns: The output.
   @differentiable(reverse)
-  public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+  public func forward(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
     return input.reshaped(toShape: shape)
+  }
+
+  // Workaround for apple/swift#59952.
+  @differentiable(reverse)
+  public func callAsFunction(_ input: Input) -> Output {
+    let activation = forward(input)
+    return annotated(activation)
   }
 }
 

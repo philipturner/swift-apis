@@ -73,6 +73,7 @@ class XLATensor {
   void ShallowCopyTo(XLATensor* dest) const;
 
   at::ScalarType dtype() const;
+  c10::optional<at::ScalarType> dtype_optional() const;
 
   at::ScalarType physical_scalar_type() const;
 
@@ -405,6 +406,10 @@ class XLATensor {
 
   XLATensor CopyTensorToDevice(const Device& device);
 
+  ir::Value MaybeCastIrValue(
+      ir::Value ir_value, const Device& device,
+      c10::optional<at::ScalarType> logical_element_type) const;
+
  public:
   // Create a new XLA tensor with the same metadata of the input tensor (with
   // possible overrides), and the new IR value.
@@ -436,6 +441,9 @@ class XLATensor {
   static SyncTensorCollection CollectSyncTensors(
       const std::vector<XLATensor>& tensors, const SyncTensorsConfig& config);
 
+  // Waits for this SyncTensorCollection's device barrier and acuire the lock.
+    static void TensorCollectionBarrier(SyncTensorCollection* coll);
+
   // Implementation of the GetTensors() API using the op-by-op executor.
   static std::vector<at::Tensor> GetTensorsOpByOp(
       std::vector<XLATensor>* tensors);
@@ -444,7 +452,7 @@ class XLATensor {
       std::vector<XLATensor>* tensors);
 
   // Runs an asynchronous syn operation using the op-by-op executor.
-  using OpByOpAsync = xla::util::AsyncTask<xla::Status>;
+  using OpByOpAsync = xla::util::AsyncTask<int>;
   static OpByOpAsync SyncTensorsGraphOpByOp(
       std::vector<XLATensor>* tensors, absl::Span<const std::string> devices,
       const SyncTensorsConfig& config);
@@ -477,7 +485,7 @@ class XLATensor {
       std::string device, ComputationCache::TypePtr cached_computation);
 
   static PostOrderData RunPostOrder(const std::vector<XLATensor>& tensors,
-                                    absl::Span<const size_t> indices);
+                                    SyncTensorCollection* coll);
 
   static ComputationCache::TypePtr LookupCachedCompile(
       const std::vector<XLATensor>& tensors, const xla::hash_t& hash);

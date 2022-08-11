@@ -18,6 +18,7 @@
 #define X10_XLA_CLIENT_METRICS_H_
 
 #include <atomic>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -87,6 +88,37 @@ class CounterData {
   std::atomic<int64_t> value_;
 };
 
+class MetricsArena {
+ public:
+  static MetricsArena* Get();
+
+  // Registers a new metric in the global arena.
+  void RegisterMetric(const std::string& name, MetricReprFn repr_fn,
+                      size_t max_samples, std::shared_ptr<MetricData>* data);
+
+  void RegisterCounter(const std::string& name,
+                       std::shared_ptr<CounterData>* data);
+
+  void ForEachMetric(
+      const std::function<void(const std::string&, MetricData*)>& metric_func);
+
+  void ForEachCounter(const std::function<void(const std::string&,
+                                               CounterData*)>& counter_func);
+
+  std::vector<std::string> GetMetricNames();
+
+  MetricData* GetMetric(const std::string& name);
+
+  std::vector<std::string> GetCounterNames();
+
+  CounterData* GetCounter(const std::string& name);
+
+ private:
+  std::mutex lock_;
+  std::map<std::string, std::shared_ptr<MetricData>> metrics_;
+  std::map<std::string, std::shared_ptr<CounterData>> counters_;
+};
+
 // Emits the value in a to_string() conversion.
 std::string MetricFnValue(double value);
 // Emits the value in a humanized bytes representation.
@@ -107,7 +139,7 @@ std::string MetricFnTime(double value);
 class Metric {
  public:
   explicit Metric(std::string name, MetricReprFn repr_fn = MetricFnValue,
-                  size_t max_samples = 1024);
+                  size_t max_samples = 0);
 
   const std::string& Name() const { return name_; }
 

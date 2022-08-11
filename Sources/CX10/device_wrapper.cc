@@ -20,9 +20,15 @@
 
 #include "device_wrapper.h"
 
+#include <fstream>
+
 #include "tensorflow/compiler/tf2xla/xla_tensor/tensor.h"
 #include "tensorflow/compiler/xla/xla_client/computation_client.h"
+#include "tensorflow/compiler/xla/xla_client/metrics_analysis.h"
 #include "tensorflow/compiler/xla/xla_client/multi_wait.h"
+#include "tensorflow/compiler/xla/xla_client/profiler.h"
+#include "tensorflow/compiler/xla/xla_client/sys_util.h"
+#include "tensorflow/core/profiler/lib/traceme.h"
 
 DeviceType ConvertDeviceType(swift_xla::DeviceType device_type) {
   switch (device_type) {
@@ -113,11 +119,19 @@ CDevice getDefaultDevice() {
 
 void setReplicationDevices(struct DeviceList* device_list) {
   const auto device_strings = DeviceListToStrings(device_list);
-  xla::ComputationClient::SetReplicationDevices(device_strings);
+  auto replication_devices =
+      std::make_shared<std::vector<std::string>>(device_strings);
+  xla::ComputationClient::Get()->SetReplicationDevices(
+      std::move(replication_devices));
 }
 
 struct DeviceList* getReplicationDevices() {
-  return DeviceListFromStrings(xla::ComputationClient::GetReplicationDevices());
+  auto replication_devices =
+      xla::ComputationClient::Get()->GetReplicationDevices();
+  if (replication_devices != nullptr)
+    return DeviceListFromStrings(*replication_devices);
+  else
+    return nullptr;
 }
 
 void syncLiveTensorsForDevices(struct DeviceList* device_list) {
@@ -139,6 +153,8 @@ void syncLiveTensorsForDevices(struct DeviceList* device_list) {
 
 void XLATensor_LazyTensorBarrier(const struct CDevice* device,
                                  struct DeviceList* device_list, bool wait) {
+  tensorflow::profiler::TraceMe activity(
+      "LazyTensorBarrier", tensorflow::profiler::TraceMeLevel::kInfo);
   const auto device_strings = DeviceListToStrings(device_list);
   swift_xla::Device tmp_device;
   if (device) tmp_device = ConvertDevice(*device);
@@ -147,4 +163,17 @@ void XLATensor_LazyTensorBarrier(const struct CDevice* device,
                                              /*devices=*/device_strings,
                                              /*wait=*/wait);
   swift_xla::XLATensor::MarkStep(converted_device);
+  bool debug_mode = xla::sys_util::GetEnvBool("PT_XLA_DEBUG", false);
+  if (TF_PREDICT_FALSE(debug_mode)) {
+    std::string report = xla::metrics::CreatePerformanceReport();
+    if (!report.empty()) {
+      std::string fout = xla::sys_util::GetEnvString("PT_XLA_DEBUG_FILE", "");
+      if (TF_PREDICT_FALSE(!fout.empty())) {
+        std::ofstream out_file(fout, std::ios_base::app);
+        out_file << report;
+      } else {
+        std::cout << report;
+      }
+    }
+  }
 }

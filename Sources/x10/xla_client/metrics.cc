@@ -15,7 +15,6 @@
 #include "tensorflow/compiler/xla/xla_client/metrics.h"
 
 #include <cmath>
-#include <map>
 #include <sstream>
 
 #include "tensorflow/compiler/xla/xla_client/debug_macros.h"
@@ -25,100 +24,6 @@
 namespace xla {
 namespace metrics {
 namespace {
-
-class MetricsArena {
- public:
-  static MetricsArena* Get();
-
-  // Registers a new metric in the global arena.
-  void RegisterMetric(const std::string& name, MetricReprFn repr_fn,
-                      size_t max_samples, std::shared_ptr<MetricData>* data);
-
-  void RegisterCounter(const std::string& name,
-                       std::shared_ptr<CounterData>* data);
-
-  void ForEachMetric(
-      const std::function<void(const std::string&, MetricData*)>& metric_func);
-
-  void ForEachCounter(const std::function<void(const std::string&,
-                                               CounterData*)>& counter_func);
-
-  std::vector<std::string> GetMetricNames() {
-    std::vector<std::string> names;
-    std::lock_guard<std::mutex> lock(lock_);
-    for (auto& name_data : metrics_) {
-      names.push_back(name_data.first);
-    }
-    return names;
-  }
-
-  MetricData* GetMetric(const std::string& name) {
-    std::lock_guard<std::mutex> lock(lock_);
-    auto it = metrics_.find(name);
-    return it != metrics_.end() ? it->second.get() : nullptr;
-  }
-
-  std::vector<std::string> GetCounterNames() {
-    std::vector<std::string> names;
-    std::lock_guard<std::mutex> lock(lock_);
-    for (auto& name_data : counters_) {
-      names.push_back(name_data.first);
-    }
-    return names;
-  }
-
-  CounterData* GetCounter(const std::string& name) {
-    std::lock_guard<std::mutex> lock(lock_);
-    auto it = counters_.find(name);
-    return it != counters_.end() ? it->second.get() : nullptr;
-  }
-
- private:
-  std::mutex lock_;
-  std::map<std::string, std::shared_ptr<MetricData>> metrics_;
-  std::map<std::string, std::shared_ptr<CounterData>> counters_;
-};
-
-MetricsArena* MetricsArena::Get() {
-  static MetricsArena* arena = new MetricsArena();
-  return arena;
-}
-
-void MetricsArena::RegisterMetric(const std::string& name, MetricReprFn repr_fn,
-                                  size_t max_samples,
-                                  std::shared_ptr<MetricData>* data) {
-  std::lock_guard<std::mutex> lock(lock_);
-  if (*data == nullptr) {
-    *data = xla::util::MapInsert(&metrics_, name, [&]() {
-      return std::make_shared<MetricData>(std::move(repr_fn), max_samples);
-    });
-  }
-}
-
-void MetricsArena::RegisterCounter(const std::string& name,
-                                   std::shared_ptr<CounterData>* data) {
-  std::lock_guard<std::mutex> lock(lock_);
-  if (*data == nullptr) {
-    *data = xla::util::MapInsert(
-        &counters_, name, []() { return std::make_shared<CounterData>(); });
-  }
-}
-
-void MetricsArena::ForEachMetric(
-    const std::function<void(const std::string&, MetricData*)>& metric_func) {
-  std::lock_guard<std::mutex> lock(lock_);
-  for (auto& name_data : metrics_) {
-    metric_func(name_data.first, name_data.second.get());
-  }
-}
-
-void MetricsArena::ForEachCounter(
-    const std::function<void(const std::string&, CounterData*)>& counter_func) {
-  std::lock_guard<std::mutex> lock(lock_);
-  for (auto& name_data : counters_) {
-    counter_func(name_data.first, name_data.second.get());
-  }
-}
 
 const std::vector<double>* ReadEnvPercentiles() {
   std::string percentiles = sys_util::GetEnvString(
@@ -188,6 +93,77 @@ void EmitCounterInfo(const std::string& name, CounterData* data,
 
 }  // namespace
 
+MetricsArena* MetricsArena::Get() {
+  static MetricsArena* arena = new MetricsArena();
+  return arena;
+}
+
+void MetricsArena::RegisterMetric(const std::string& name, MetricReprFn repr_fn,
+                                  size_t max_samples,
+                                  std::shared_ptr<MetricData>* data) {
+  std::lock_guard<std::mutex> lock(lock_);
+  if (*data == nullptr) {
+    *data = xla::util::MapInsert(&metrics_, name, [&]() {
+      return std::make_shared<MetricData>(std::move(repr_fn), max_samples);
+    });
+  }
+}
+
+void MetricsArena::RegisterCounter(const std::string& name,
+                                   std::shared_ptr<CounterData>* data) {
+  std::lock_guard<std::mutex> lock(lock_);
+  if (*data == nullptr) {
+    *data = xla::util::MapInsert(
+        &counters_, name, []() { return std::make_shared<CounterData>(); });
+  }
+}
+
+void MetricsArena::ForEachMetric(
+    const std::function<void(const std::string&, MetricData*)>& metric_func) {
+  std::lock_guard<std::mutex> lock(lock_);
+  for (auto& name_data : metrics_) {
+    metric_func(name_data.first, name_data.second.get());
+  }
+}
+
+void MetricsArena::ForEachCounter(
+    const std::function<void(const std::string&, CounterData*)>& counter_func) {
+  std::lock_guard<std::mutex> lock(lock_);
+  for (auto& name_data : counters_) {
+    counter_func(name_data.first, name_data.second.get());
+  }
+}
+
+std::vector<std::string> MetricsArena::GetMetricNames() {
+  std::vector<std::string> names;
+  std::lock_guard<std::mutex> lock(lock_);
+  for (auto& name_data : metrics_) {
+    names.push_back(name_data.first);
+  }
+  return names;
+}
+
+MetricData* MetricsArena::GetMetric(const std::string& name) {
+  std::lock_guard<std::mutex> lock(lock_);
+  auto it = metrics_.find(name);
+  return it != metrics_.end() ? it->second.get() : nullptr;
+}
+
+std::vector<std::string> MetricsArena::GetCounterNames() {
+  std::vector<std::string> names;
+  std::lock_guard<std::mutex> lock(lock_);
+  for (auto& name_data : counters_) {
+    names.push_back(name_data.first);
+  }
+  return names;
+}
+
+CounterData* MetricsArena::GetCounter(const std::string& name) {
+  std::lock_guard<std::mutex> lock(lock_);
+  auto it = counters_.find(name);
+  return it != counters_.end() ? it->second.get() : nullptr;
+}
+
 MetricData::MetricData(MetricReprFn repr_fn, size_t max_samples)
     : repr_fn_(std::move(repr_fn)), samples_(max_samples) {}
 
@@ -233,7 +209,9 @@ std::vector<Sample> MetricData::Samples(double* accumulator,
 Metric::Metric(std::string name, MetricReprFn repr_fn, size_t max_samples)
     : name_(std::move(name)),
       repr_fn_(std::move(repr_fn)),
-      max_samples_(max_samples),
+      max_samples_(max_samples != 0
+                       ? max_samples
+                       : sys_util::GetEnvInt("XLA_METRICS_SAMPLES", 1024)),
       data_(nullptr) {}
 
 double Metric::Accumulator() const { return GetData()->Accumulator(); }
